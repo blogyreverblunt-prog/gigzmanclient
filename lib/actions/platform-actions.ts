@@ -20,6 +20,7 @@ import {
 } from "@/lib/calculators/registry";
 import { tenantDataTag, tenantSlugTag } from "@/lib/cache-tags";
 import { putObject, deleteObject } from "@/lib/storage";
+import { lookupPlace, fetchPlaceById, type PlacesOutcome } from "@/lib/gbp/places";
 import {
   ACCEPTED_LOGO_TYPES,
   ICON_SIZES,
@@ -861,6 +862,119 @@ export async function updateClientHeroCopy(formData: FormData): Promise<ActionRe
 
     invalidateTenant(row);
     return { ok: true, message: "Hero copy saved." };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
+
+// ────────────────────────────────────────────── Google Business Profile
+
+export interface PlaceLookupResult extends ActionResult {
+  outcome?: PlacesOutcome;
+}
+
+/** Look up a place. Writes nothing — the operator accepts fields afterwards. */
+export async function lookupGooglePlace(formData: FormData): Promise<PlaceLookupResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const placeId = String(formData.get("placeId") ?? "").trim();
+    const outcome = placeId
+      ? await fetchPlaceById(placeId)
+      : await lookupPlace(String(formData.get("link") ?? ""));
+
+    return { ok: outcome.ok, message: outcome.ok ? undefined : outcome.message, outcome };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
+
+/**
+ * Write the fields the operator ticked, and only those.
+ *
+ * Nothing arrives here as a side effect of the lookup: each field is posted
+ * because a human accepted it. That is the whole design — an autofill that
+ * writes on fetch would put Google's idea of a business's address onto a real
+ * website with nobody having read it, and Google is not always right about a
+ * small firm's listing.
+ *
+ * `lastVerifiedAt` is not a column on `firm_settings`, so the confirmation is
+ * recorded by `updatedAt` alone. Deliberate: adding a column per field to
+ * record provenance is the `_status` system, which lives in YAML, and
+ * duplicating it here would create a second half-implemented one. What matters
+ * for correctness is that no field is written unread.
+ */
+export async function applyGooglePlaceFields(formData: FormData): Promise<ActionResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const row = await loadClientRow(String(formData.get("clientId") ?? ""));
+    if (!row) return { ok: false, message: "Client not found." };
+
+    const accepted = formData.getAll("accept").map(String);
+    if (accepted.length === 0) {
+      return { ok: false, message: "Nothing was ticked, so nothing was saved." };
+    }
+
+    // Only these keys may be written, and each maps to exactly one column. A
+    // posted `accept=rating` cannot reach the database: it is not in the map.
+    //
+    // `rating` and `userRatingCount` are deliberately absent. ICAI prohibits
+    // ratings and testimonials on a chartered accountancy firm's own site, and
+    // a star rating fetched from Google is exactly that — so the autofill does
+    // not offer it for ANY vertical rather than making the guard conditional
+    // and relying on the vertical check holding forever.
+    const WRITABLE = {
+      firmName: "firmName",
+      businessCategory: "businessCategory",
+      phone: "phone",
+      whatsapp: "whatsapp",
+      addressLine: "addressLine",
+      locality: "locality",
+      region: "region",
+      postalCode: "postalCode",
+      country: "country",
+      latitude: "latitude",
+      longitude: "longitude",
+      googleMapsUrl: "googleMapsUrl",
+    } as const;
+
+    const patch: Record<string, unknown> = {};
+    for (const key of accepted) {
+      if (key === "openingHours") {
+        const raw = String(formData.get("openingHours") ?? "");
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw) as OpeningHour[];
+          if (Array.isArray(parsed) && parsed.length === OPENING_DAYS.length) {
+            patch.openingHours = parsed;
+          }
+        } catch {
+          return { ok: false, message: "The opening hours could not be read. Enter them by hand." };
+        }
+        continue;
+      }
+      if (!Object.hasOwn(WRITABLE, key)) continue;
+      const value = String(formData.get(`value.${key}`) ?? "").trim();
+      if (value) patch[WRITABLE[key as keyof typeof WRITABLE]] = value;
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return { ok: false, message: "Nothing to save — the ticked fields were all empty." };
+    }
+
+    await db
+      .update(firmSettings)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(firmSettings.clientId, row.id));
+
+    invalidateTenant(row);
+    return {
+      ok: true,
+      message: `Saved ${Object.keys(patch).length} field${Object.keys(patch).length === 1 ? "" : "s"} from Google.`,
+    };
   } catch (error) {
     unstable_rethrow(error);
     return fail(error);

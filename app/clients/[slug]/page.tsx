@@ -14,6 +14,8 @@ import BrandingPanel from "@/components/platform/BrandingPanel";
 import SearchAppearanceForm from "@/components/platform/SearchAppearanceForm";
 import ReadinessPanel from "@/components/platform/ReadinessPanel";
 import HeroCopyForm from "@/components/platform/HeroCopyForm";
+import GbpAutofill from "@/components/platform/GbpAutofill";
+import { hasPlacesKey } from "@/lib/gbp/places";
 import { defaultHeroCopy } from "@/lib/premium-v2/positioning";
 import { clientReadiness } from "@/lib/platform/readiness";
 import { generatedHomeMeta } from "@/lib/seo/generated";
@@ -218,6 +220,31 @@ export default async function ClientEditPage({
             </p>
           )}
 
+          {/*
+            Placed above the business-details form because it is what an
+            operator reaches for first on a new client: fetch, tick, then fill
+            in the handful Google does not publish.
+          */}
+          {settings ? (
+            <GbpAutofill
+              clientId={client.id}
+              hasKey={hasPlacesKey()}
+              current={{
+                firmName: settings.firmName ?? "",
+                businessCategory: settings.businessCategory ?? "",
+                phone: settings.phone ?? "",
+                whatsapp: settings.whatsapp ?? "",
+                addressLine: settings.addressLine ?? "",
+                locality: settings.locality ?? "",
+                region: settings.region ?? "",
+                postalCode: settings.postalCode ?? "",
+                country: settings.country ?? "",
+                latitude: settings.latitude ?? "",
+                longitude: settings.longitude ?? "",
+                googleMapsUrl: settings.googleMapsUrl ?? "",
+              }}
+            />
+          ) : null}
           {settings ? (
             <SearchAppearanceForm
               clientId={client.id}

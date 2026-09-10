@@ -38,6 +38,9 @@ importers:
       react-dom:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
+      sharp:
+        specifier: ^0.35.4
+        version: 0.35.4(@types/node@20.19.43)
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
@@ -66,9 +69,6 @@ importers:
       playwright:
         specifier: ^1.62.1
         version: 1.62.1
-      sharp:
-        specifier: ^0.35.4
-        version: 0.35.4(@types/node@20.19.43)
       tailwindcss:
         specifier: ^4
         version: 4.3.3
