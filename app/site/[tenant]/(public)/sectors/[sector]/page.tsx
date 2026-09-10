@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import PremiumV2PropertiesPage from "@/components/realestate/premium-v2/PremiumV2PropertiesPage";
 import { getTenantBySlug } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { getFirmSettings, getProperties } from "@/lib/content";
 import { sectorSlug } from "@/lib/register";
@@ -27,7 +27,7 @@ async function resolveSector(tenantId: string, slug: string) {
 
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
-    if (getTemplateKeyForSlug(tenant.slug) !== "premium-v2") return [];
+    if (templateKeyFor(tenant) !== "premium-v2") return [];
     const rows = await getProperties(tenant.id);
     const sectors = new Set(rows.map((r) => r.sector).filter((s): s is string => Boolean(s)));
     return [...sectors].map((s) => ({ sector: sectorSlug(s) }));
@@ -52,7 +52,7 @@ export async function generateMetadata(props: PageProps<"/site/[tenant]/sectors/
 export default async function SectorPage(props: PageProps<"/site/[tenant]/sectors/[sector]">) {
   const { tenant: tenantSlug, sector } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
 
   const label = await resolveSector(tenant.id, sector);
   if (!label) notFound();

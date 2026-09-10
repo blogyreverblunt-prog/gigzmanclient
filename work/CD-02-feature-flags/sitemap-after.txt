@@ -1,0 +1,6 @@
+core         before=120    after=120    SET-MATCH
+properties   before=1300   after=1300   SET-MATCH
+register     before=308    after=308    SET-MATCH
+localities   before=56     after=56     SET-MATCH
+updates      before=18     after=18     SET-MATCH
+services     before=20     after=20     SET-MATCH

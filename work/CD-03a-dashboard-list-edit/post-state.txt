@@ -1,0 +1,81 @@
+ M AGENTS.md
+ M README.md
+ M app/layout.tsx
+ M app/lookup-actions.ts
+ M app/page.tsx
+ M app/site/[tenant]/(public)/area-converter/[pair]/page.tsx
+ M app/site/[tenant]/(public)/area-converter/page.tsx
+ M app/site/[tenant]/(public)/builders/[slug]/page.tsx
+ M app/site/[tenant]/(public)/builders/page.tsx
+ M app/site/[tenant]/(public)/calculators/[key]/page.tsx
+ M app/site/[tenant]/(public)/calculators/page.tsx
+ M app/site/[tenant]/(public)/contact/page.tsx
+ M app/site/[tenant]/(public)/faq/page.tsx
+ M app/site/[tenant]/(public)/firm-profile/page.tsx
+ M app/site/[tenant]/(public)/home-loan/[slug]/[amount]/page.tsx
+ M app/site/[tenant]/(public)/home-loan/[slug]/page.tsx
+ M app/site/[tenant]/(public)/home-loan/page.tsx
+ M app/site/[tenant]/(public)/layout.tsx
+ M app/site/[tenant]/(public)/legal/[slug]/page.tsx
+ M app/site/[tenant]/(public)/localities/[slug]/page.tsx
+ M app/site/[tenant]/(public)/localities/page.tsx
+ M app/site/[tenant]/(public)/maps/gurgaon/[area]/page.tsx
+ M app/site/[tenant]/(public)/maps/gurgaon/page.tsx
+ M app/site/[tenant]/(public)/properties/[slug]/page.tsx
+ M app/site/[tenant]/(public)/properties/loading.tsx
+ M app/site/[tenant]/(public)/properties/page.tsx
+ M app/site/[tenant]/(public)/property-management/page.tsx
+ M app/site/[tenant]/(public)/rental-yield/[corridor]/page.tsx
+ M app/site/[tenant]/(public)/rental-yield/page.tsx
+ M app/site/[tenant]/(public)/sectors/[sector]/page.tsx
+ M app/site/[tenant]/(public)/sectors/page.tsx
+ M app/site/[tenant]/(public)/updates/[slug]/page.tsx
+ M app/site/[tenant]/(public)/updates/page.tsx
+ M app/site/[tenant]/(public)/vastu/[topic]/page.tsx
+ M app/site/[tenant]/(public)/vastu/gurugram/[sector]/[aspect]/page.tsx
+ M app/site/[tenant]/(public)/vastu/gurugram/[sector]/page.tsx
+ M app/site/[tenant]/(public)/vastu/gurugram/page.tsx
+ M app/site/[tenant]/(public)/vastu/page.tsx
+ M app/site/[tenant]/dashboard/layout.tsx
+ M clients/evergreen-real-estate/profile.yaml
+ M clients/expert-realtors/profile.yaml
+ M clients/high-properties/profile.yaml
+ M clients/nayra-realtors/profile.yaml
+ M clients/urban-flat-real-estate/profile.yaml
+ M components/realestate/premium-v2/FooterV2.tsx
+ M components/realestate/premium-v2/PremiumV2CalculatorsIndexPage.tsx
+ M components/realestate/premium-v2/PremiumV2EmiCalculatorPage.tsx
+ M components/realestate/templates/PremiumV2Home.tsx
+ M drizzle/meta/_journal.json
+ M lib/actions/auth-actions.ts
+ M lib/actions/submit-query.ts
+ M lib/auth.ts
+ M lib/content.ts
+ M lib/db/index.ts
+ M lib/db/schema.ts
+ M lib/domains.ts
+ M lib/home-loan/enabled.ts
+ M lib/platform-auth.ts
+ M lib/premium-v2/home-sections.ts
+ M lib/premium-v2/tools.ts
+ M lib/sitemap.ts
+ M lib/static-params.ts
+ M lib/templates/index.ts
+ M lib/tenant.ts
+ M lib/vastu/enabled.ts
+ M proxy.ts
+ M scripts/seed-client.ts
+?? .claude/
+?? app/clients/
+?? components/platform/
+?? current-status.md
+?? docs/
+?? drizzle/0006_cultured_mikhail_rasputin.sql
+?? drizzle/0007_chubby_runaways.sql
+?? drizzle/meta/0006_snapshot.json
+?? drizzle/meta/0007_snapshot.json
+?? lib/actions/platform-actions.ts
+?? lib/cache-tags.ts
+?? lib/features.ts
+?? lib/platform/
+?? work/

@@ -1,12 +1,11 @@
 import type { MetadataRoute } from "next";
-import { eq, and, sql } from "drizzle-orm";
+import { asc, eq, and, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { clients, services, professionalUpdates, properties, localities } from "@/lib/db/schema";
 import { sectorSlug, developerSlug } from "@/lib/register";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { getTenantPath, templateKeyFor } from "@/lib/templates";
 import { LOCATION_PAGES } from "@/lib/locations";
 import { getVerticalConfig } from "@/lib/verticals";
-import { getTenantPath } from "@/lib/templates";
 import { LOAN_AMOUNTS, amountSlugStem } from "@/lib/home-loan/amounts";
 import { homeLoanEnabled } from "@/lib/home-loan/enabled";
 import { LENDERS } from "@/lib/home-loan/banks";
@@ -68,7 +67,15 @@ const TENANT_ONLY = (process.env.TENANT_ONLY ?? "")
 
 export async function sitemapClients(): Promise<Client[]> {
   try {
-    const rows = await db.select().from(clients).where(eq(clients.isActive, true));
+    // `ORDER BY slug`: without it the rows follow physical heap order, so every
+    // write to `clients` — routine now that the platform dashboard edits them —
+    // reshuffles sitemap output. The URL set is unaffected either way; what this
+    // buys is that a sitemap diff means something.
+    const rows = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.isActive, true))
+      .orderBy(asc(clients.slug));
     return TENANT_ONLY.length > 0 ? rows.filter((r) => TENANT_ONLY.includes(r.slug)) : rows;
   } catch {
     return [];
@@ -101,7 +108,7 @@ export function prefixFor(client: Client): string {
   if (HOST_MODE) return siteOrigin();
   return client.customDomain
     ? `https://${client.customDomain}`
-    : `${siteOrigin()}${getTenantPath(client.vertical, client.slug)}`;
+    : `${siteOrigin()}${getTenantPath(client)}`;
 }
 
 /**
@@ -136,10 +143,10 @@ function coreEntries(client: Client, prefix: string): Entries {
       { url: `${prefix}/vastu`, priority: 0.7 },
       { url: `${prefix}/maps/gurgaon`, priority: 0.7 },
     );
-    if (homeLoanEnabled(client.slug)) {
+    if (homeLoanEnabled(client)) {
       entries.push({ url: `${prefix}/home-loan`, priority: 0.7 });
     }
-    if (vastuSectorsEnabled(client.slug)) {
+    if (vastuSectorsEnabled(client)) {
       entries.push({ url: `${prefix}/vastu/gurugram`, priority: 0.6 });
     }
   }
@@ -158,7 +165,16 @@ function mapEntries(client: Client, prefix: string): Entries {
 function homeLoanEntries(client: Client, prefix: string): Entries {
   // Home-loan pages come from static config rather than a table, so none of
   // the row queries discover them — they are enumerated explicitly.
-  if (!homeLoanEnabled(client.slug)) return [];
+  //
+  // Vertical and template guarded exactly as `registerEntries` and
+  // `vastuSectorEntries` below, and for the same reason: the routes live under
+  // the premium-v2 real-estate template only. Without it this function
+  // disagreed with `coreEntries` above about a single family on a single row —
+  // that one gates the `/home-loan` hub on the vertical, while nothing gated
+  // the ~1,050 children, so a non-real-estate row carrying the flag would have
+  // advertised a thousand URLs that 404 while withholding their parent.
+  if (client.vertical !== "realestate" || templateKeyFor(client) !== "premium-v2") return [];
+  if (!homeLoanEnabled(client)) return [];
   const entries: Entries = [];
 
   for (const amount of LOAN_AMOUNTS) {
@@ -220,7 +236,7 @@ function vastuEntries(client: Client, prefix: string): Entries {
 function vastuSectorEntries(client: Client, prefix: string): Entries {
   // Gated on the same allowlist the pages use — listing sector URLs for a
   // client whose routes 404 would be a sitemap full of dead links.
-  if (client.vertical !== "realestate" || !vastuSectorsEnabled(client.slug)) return [];
+  if (client.vertical !== "realestate" || !vastuSectorsEnabled(client)) return [];
 
   const aspects = sectorAspectSlugs(
     DIRECTIONS.map((d) => d.slug),
@@ -261,7 +277,7 @@ async function propertyEntries(client: Client, prefix: string): Promise<Entries>
 async function registerEntries(client: Client, prefix: string): Promise<Entries> {
   // The routes live under the premium-v2 real-estate template only; listing
   // them for any other tenant advertises URLs that 404 on that tenant's site.
-  if (client.vertical !== "realestate" || getTemplateKeyForSlug(client.slug) !== "premium-v2") return [];
+  if (client.vertical !== "realestate" || templateKeyFor(client) !== "premium-v2") return [];
 
   const rows = await db
     .select()

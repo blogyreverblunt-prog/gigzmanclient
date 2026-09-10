@@ -19,8 +19,9 @@ import AnnouncementBar from "@/components/site/AnnouncementBar";
 import CompliancePopup from "@/components/site/CompliancePopup";
 import WhatsAppFloat from "@/components/site/WhatsAppFloat";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { toolLinksFor } from "@/lib/premium-v2/tools";
+import { homeLoanEnabled } from "@/lib/home-loan/enabled";
 import { getFirmSettings, getNextDeadline, getServices } from "@/lib/content";
 import { buildOrganizationJsonLd, jsonLdProps } from "@/lib/schema-org";
 import { deadlineInstant, daysUntil, formatDate } from "@/lib/format";
@@ -97,7 +98,11 @@ export default async function SiteLayout({
 
   const categories = [...new Set(services.map((s) => s.category))];
   const effectiveDate = deadline ? (deadline.extendedDueDate ?? deadline.dueDate) : null;
-  const isPremiumV2 = getTemplateKeyForSlug(tenant.slug) === "premium-v2";
+  // One lookup feeding both uses below. `data-template` selects this tenant's
+  // entire palette in app/globals.css, so it and the branch that renders
+  // premium-v2 chrome must not be able to disagree.
+  const templateKey = templateKeyFor(tenant);
+  const isPremiumV2 = templateKey === "premium-v2";
 
   return (
     // Theme scope. These attributes used to sit on <html> in the root layout,
@@ -106,7 +111,7 @@ export default async function SiteLayout({
     // identically while leaving the root layout static.
     <div
       data-vertical={tenant.vertical}
-      data-template={getTemplateKeyForSlug(tenant.slug)}
+      data-template={templateKey}
       className="flex min-h-full flex-1 flex-col"
     >
       <script
@@ -140,7 +145,7 @@ export default async function SiteLayout({
             basePath={basePath || "/"}
             navItems={navItems}
             toolLinks={[
-              ...toolLinksFor(tenant.slug).map((tool) => ({
+              ...toolLinksFor(tenant).map((tool) => ({
                 label: tool.label,
                 path: tool.path,
                 icon: tool.icon,
@@ -190,7 +195,7 @@ export default async function SiteLayout({
       {isPremiumV2 ? <ConsultationCtaV2 phone={settings.phone} /> : null}
 
       {isPremiumV2 ? (
-        <FooterV2 settings={settings} basePath={basePath || "/"} clientSlug={tenant.slug} />
+        <FooterV2 settings={settings} basePath={basePath || "/"} homeLoanEnabled={homeLoanEnabled(tenant)} />
       ) : (
         <SiteFooter
           settings={settings}

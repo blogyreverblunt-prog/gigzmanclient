@@ -1,0 +1,6 @@
+cap = 3 routes/tenant = 3700
+0 enabled, no ack : {"ok":true}
+0 enabled, ack    : {"ok":true}
+1 enabled, no ack : {"ok":false,"message":"Enabling vastu sector pages here would make this the 2nd tenant with them, adding about 3,700 prerendered routes to every build (currently 1 tenant: high-properties). docs/client-dashboard-brief.md §11 lists this as a decision that needs a person. Tick the confirmation to proceed."}
+1 enabled, ack    : {"ok":true}
+3 enabled, ack    : {"ok":false,"message":"Vastu sector pages are capped at 3 tenants and 3 already have them (a, b, c). Each tenant adds about 3,700 prerendered routes; three is the most that has ever shipped, at a 32-minute production build, and a fourth pushed the deployment past its output limit and failed after 41 minutes. Turn it off for another tenant first."}

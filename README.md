@@ -41,8 +41,9 @@ With `TENANT_MODE=path`, a tenant is served at
 | `nayra-realtors`, `urban-flat-real-estate` | premium-v2 | |
 | `arora-k-associates` | CA vertical | |
 
-Add one by dropping a folder under `clients/`, registering the slug in
-`lib/templates/index.ts`, and running `pnpm seed:client <slug>`.
+Add one by dropping a folder under `clients/`, setting `template: premium-v2`
+in its `profile.yaml` (real-estate tenants only — `pnpm seed:client` writes it
+to `clients.template_key`), and running `pnpm seed:client <slug>`.
 
 ## Content scripts
 

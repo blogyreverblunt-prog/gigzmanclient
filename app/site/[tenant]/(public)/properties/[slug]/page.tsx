@@ -9,7 +9,7 @@ import PropertyGallery from "@/components/realestate/PropertyGallery";
 import PremiumV2PropertyDetailPage from "@/components/realestate/premium-v2/PremiumV2PropertyDetailPage";
 import { ogFor } from "@/lib/og";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { getFirmSettings, getProperty, getPropertyImages, getProperties } from "@/lib/content";
 import {
@@ -105,7 +105,7 @@ export default async function PropertyDetailPage(props: PageProps<"/site/[tenant
     </>
   );
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     // Same-locality matches first, falling back to same-property-type when
     // there aren't enough of those (a niche locality can otherwise surface
     // zero "Similar Properties").

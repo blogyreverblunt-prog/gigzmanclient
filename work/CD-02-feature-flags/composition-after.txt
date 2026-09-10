@@ -1,0 +1,5 @@
+high-properties          map=0 mgmt=2 homeloanlink=1
+evergreen-real-estate    map=1 mgmt=0 homeloanlink=0
+expert-realtors          map=1 mgmt=0 homeloanlink=0
+nayra-realtors           map=1 mgmt=0 homeloanlink=1
+urban-flat-real-estate   map=1 mgmt=0 homeloanlink=1

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities, getProperties } from "@/lib/content";
 import { homeLoanEnabled } from "@/lib/home-loan/enabled";
+import { templateKeyFor } from "@/lib/templates";
 import { buildAffordability, affordabilityVerdict } from "@/lib/home-loan/affordability";
 import { buildBreadcrumbJsonLd, jsonLdProps } from "@/lib/schema-org";
 import EmiCalculatorHeroV2 from "@/components/realestate/premium-v2/home-loan/EmiCalculatorHeroV2";
@@ -33,7 +34,18 @@ export async function generateMetadata(
 export default async function HomeLoanHubPage(props: PageProps<"/site/[tenant]/home-loan">) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || !homeLoanEnabled(tenant.slug)) notFound();
+  // Vertical/template gate as well as the feature flag, matching every other
+  // premium-v2 family (see `vastu/gurugram/page.tsx`). The flag alone was the
+  // whole gate here, so a `clients.features.homeLoan` set on a non-real-estate
+  // row would have published "authorised channel partner" copy and lender
+  // trademarks on that client's site. `updateClientFeatures` now refuses to set
+  // it; this is the second, independent half — a row that carries the flag by
+  // any other route still cannot render the claim. Keep in step with
+  // `homeLoanEntries()` in lib/sitemap.ts and the sibling routes under
+  // `home-loan/`.
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2" || !homeLoanEnabled(tenant)) {
+    notFound();
+  }
 
   const basePath = basePathFor(tenant);
   const p = (path: string) => joinPath(basePath, path);

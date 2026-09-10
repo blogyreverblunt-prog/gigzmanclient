@@ -48,15 +48,25 @@ export async function submitQuery(
 
   // A Server Action is a POST to its own route and is directly reachable, so the
   // tenant is resolved here rather than trusted from the client payload.
+  //
+  // Both branches carry `isActive`: a deactivated tenant is off the air for
+  // writes as well as renders, so a lead posted to a switched-off client's
+  // contact action must not be written on its behalf. The form's own pages 404
+  // by then, but the action stays reachable by direct POST. See lib/tenant.ts's
+  // `isActive` comment for the full list of paths carrying this predicate.
   let clientId: string | null = null;
   if (tenantSlug) {
-    const [row] = await db.select().from(clients).where(eq(clients.slug, tenantSlug)).limit(1);
+    const [row] = await db
+      .select()
+      .from(clients)
+      .where(and(eq(clients.slug, tenantSlug), eq(clients.isActive, true)))
+      .limit(1);
     clientId = row?.id ?? null;
   } else if (tenantHost) {
     const [row] = await db
       .select()
       .from(clients)
-      .where(eq(clients.customDomain, tenantHost))
+      .where(and(eq(clients.customDomain, tenantHost), eq(clients.isActive, true)))
       .limit(1);
     clientId = row?.id ?? null;
   }

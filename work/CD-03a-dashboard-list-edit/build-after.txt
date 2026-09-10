@@ -1,0 +1,211 @@
+$ next build
+▲ Next.js 16.3.3 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 57ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.3s
+  Running TypeScript ...
+  Finished TypeScript in 11.9s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/9659) ...
+  Generating static pages using 15 workers (2414/9659) 
+  Generating static pages using 15 workers (4829/9659) 
+  Generating static pages using 15 workers (7244/9659) 
+✓ Generating static pages using 15 workers (9659/9659) in 2.1min
+  Finalizing page optimization ...
+
+Route (app)                                                                     Revalidate  Expire
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /clients/[slug]
+├ ƒ /login
+├ ○ /robots.txt
+├   /site/[tenant]
+│ ├ ● /site/high-properties                                                             5m      1y
+│ ├ ● /site/evergreen-real-estate                                                       5m      1y
+│ ├ ● /site/expert-realtors                                                             5m      1y
+│ └ ● [+3 more paths]
+├ ƒ /site/[tenant]/[location]
+├   /site/[tenant]/area-converter
+│ ├ ● /site/high-properties/area-converter                                              5m      1y
+│ ├ ● /site/evergreen-real-estate/area-converter                                        5m      1y
+│ ├ ● /site/expert-realtors/area-converter                                              5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/area-converter/[pair]
+│ ├ ● /site/high-properties/area-converter/square-feet-to-square-yard                   5m      1y
+│ ├ ● /site/high-properties/area-converter/square-feet-to-square-metre                  5m      1y
+│ ├ ● /site/high-properties/area-converter/square-feet-to-square-karam                  5m      1y
+│ └ ● [+907 more paths]
+├   /site/[tenant]/builders
+│ ├ ● /site/high-properties/builders                                                    5m      1y
+│ ├ ● /site/evergreen-real-estate/builders                                              5m      1y
+│ ├ ● /site/expert-realtors/builders                                                    5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/builders/[slug]
+│ ├ ● /site/high-properties/builders/meridian-developers                                5m      1y
+│ ├ ● /site/high-properties/builders/northgate-estates                                  5m      1y
+│ ├ ● /site/high-properties/builders/vatika                                             5m      1y
+│ └ ● [+125 more paths]
+├   /site/[tenant]/calculators
+│ ├ ● /site/high-properties/calculators                                                 5m      1y
+│ ├ ● /site/evergreen-real-estate/calculators                                           5m      1y
+│ ├ ● /site/expert-realtors/calculators                                                 5m      1y
+│ └ ● [+3 more paths]
+├ ƒ /site/[tenant]/calculators/[key]
+├   /site/[tenant]/careers
+│ ├ ● /site/high-properties/careers                                                     5m      1y
+│ ├ ● /site/evergreen-real-estate/careers                                               5m      1y
+│ ├ ● /site/expert-realtors/careers                                                     5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/compliance-calendar
+│ ├ ● /site/high-properties/compliance-calendar                                         5m      1y
+│ ├ ● /site/evergreen-real-estate/compliance-calendar                                   5m      1y
+│ ├ ● /site/expert-realtors/compliance-calendar                                         5m      1y
+│ └ ● [+3 more paths]
+├ ƒ /site/[tenant]/contact
+├ ƒ /site/[tenant]/dashboard
+├ ƒ /site/[tenant]/dashboard/calculators
+├ ƒ /site/[tenant]/dashboard/compliance
+├ ƒ /site/[tenant]/dashboard/localities
+├ ƒ /site/[tenant]/dashboard/login
+├ ƒ /site/[tenant]/dashboard/properties
+├ ƒ /site/[tenant]/dashboard/queries
+├ ƒ /site/[tenant]/dashboard/queries/[id]
+├ ƒ /site/[tenant]/dashboard/settings
+├ ƒ /site/[tenant]/dashboard/updates
+├   /site/[tenant]/faq
+│ ├ ● /site/high-properties/faq                                                         5m      1y
+│ ├ ● /site/evergreen-real-estate/faq                                                   5m      1y
+│ ├ ● /site/expert-realtors/faq                                                         5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/firm-profile
+│ ├ ● /site/high-properties/firm-profile                                                5m      1y
+│ ├ ● /site/evergreen-real-estate/firm-profile                                          5m      1y
+│ ├ ● /site/expert-realtors/firm-profile                                                5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/home-loan
+│ ├ ● /site/high-properties/home-loan                                                   5m      1y
+│ ├ ● /site/evergreen-real-estate/home-loan                                             5m      1y
+│ ├ ● /site/expert-realtors/home-loan                                                   5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/home-loan/[slug]
+│ ├ ● /site/high-properties/home-loan/10-lakh-home-loan-emi                             5m      1y
+│ ├ ● /site/high-properties/home-loan/15-lakh-home-loan-emi                             5m      1y
+│ ├ ● /site/high-properties/home-loan/20-lakh-home-loan-emi                             5m      1y
+│ └ ● [+129 more paths]
+├   /site/[tenant]/home-loan/[slug]/[amount]
+│ ├ ● /site/high-properties/home-loan/hdfc-bank/10-lakh                                 5m      1y
+│ ├ ● /site/high-properties/home-loan/hdfc-bank/15-lakh                                 5m      1y
+│ ├ ● /site/high-properties/home-loan/hdfc-bank/20-lakh                                 5m      1y
+│ └ ● [+1437 more paths]
+├   /site/[tenant]/knowledge
+│ ├ ● /site/high-properties/knowledge                                                   5m      1y
+│ ├ ● /site/evergreen-real-estate/knowledge                                             5m      1y
+│ ├ ● /site/expert-realtors/knowledge                                                   5m      1y
+│ └ ● [+3 more paths]
+├ ƒ /site/[tenant]/legal/[slug]
+├   /site/[tenant]/localities
+│ ├ ● /site/high-properties/localities                                                  5m      1y
+│ ├ ● /site/evergreen-real-estate/localities                                            5m      1y
+│ ├ ● /site/expert-realtors/localities                                                  5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/localities/[slug]
+│ ├ ● /site/high-properties/localities/golf-course-road                                 5m      1y
+│ ├ ● /site/high-properties/localities/dwarka-expressway                                5m      1y
+│ ├ ● /site/high-properties/localities/sohna-road                                       5m      1y
+│ └ ● [+25 more paths]
+├   /site/[tenant]/maps/gurgaon
+│ ├ ● /site/high-properties/maps/gurgaon                                                5m      1y
+│ ├ ● /site/evergreen-real-estate/maps/gurgaon                                          5m      1y
+│ ├ ● /site/expert-realtors/maps/gurgaon                                                5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/maps/gurgaon/[area]
+│ ├ ● /site/high-properties/maps/gurgaon/masterplan                                     5m      1y
+│ ├ ● /site/high-properties/maps/gurgaon/sohna-masterplan                               5m      1y
+│ ├ ● /site/high-properties/maps/gurgaon/dlf-phase-1                                    5m      1y
+│ └ ● [+372 more paths]
+├ ƒ /site/[tenant]/opengraph-image-rjtvo9
+├   /site/[tenant]/properties
+│ ├ ● /site/high-properties/properties                                                  5m      1y
+│ ├ ● /site/evergreen-real-estate/properties                                            5m      1y
+│ ├ ● /site/expert-realtors/properties                                                  5m      1y
+│ └ ● [+3 more paths]
+├ ƒ /site/[tenant]/properties/[slug]
+├   /site/[tenant]/property-management
+│ ├ ● /site/high-properties/property-management                                         5m      1y
+│ ├ ● /site/evergreen-real-estate/property-management                                   5m      1y
+│ ├ ● /site/expert-realtors/property-management                                         5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/rental-yield
+│ ├ ● /site/high-properties/rental-yield                                                5m      1y
+│ ├ ● /site/evergreen-real-estate/rental-yield                                          5m      1y
+│ ├ ● /site/expert-realtors/rental-yield                                                5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/rental-yield/[corridor]
+│ ├ ● /site/high-properties/rental-yield/golf-course-road                               5m      1y
+│ ├ ● /site/high-properties/rental-yield/dwarka-expressway                              5m      1y
+│ ├ ● /site/high-properties/rental-yield/sohna-road                                     5m      1y
+│ └ ● [+25 more paths]
+├   /site/[tenant]/sectors
+│ ├ ● /site/high-properties/sectors                                                     5m      1y
+│ ├ ● /site/evergreen-real-estate/sectors                                               5m      1y
+│ ├ ● /site/expert-realtors/sectors                                                     5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/sectors/[sector]
+│ ├ ● /site/high-properties/sectors/54                                                  5m      1y
+│ ├ ● /site/high-properties/sectors/70                                                  5m      1y
+│ ├ ● /site/high-properties/sectors/88                                                  5m      1y
+│ └ ● [+167 more paths]
+├   /site/[tenant]/services
+│ ├ ● /site/high-properties/services                                                    5m      1y
+│ ├ ● /site/evergreen-real-estate/services                                              5m      1y
+│ ├ ● /site/expert-realtors/services                                                    5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/services/[slug]
+│ ├ ● /site/arora-k-associates/services/income-tax-return                               5m      1y
+│ ├ ● /site/arora-k-associates/services/tax-planning-advisory                           5m      1y
+│ ├ ● /site/arora-k-associates/services/tds-compliance                                  5m      1y
+│ └ ● [+17 more paths]
+├ ƒ /site/[tenant]/thank-you
+├ ƒ /site/[tenant]/updates
+├   /site/[tenant]/updates/[slug]
+│ ├ ● /site/high-properties/updates/dwarka-expressway-price-trend-2026                  5m      1y
+│ ├ ● /site/high-properties/updates/rera-registration-what-buyers-should-check          5m      1y
+│ ├ ● /site/high-properties/updates/emi-vs-rent-golf-course-road                        5m      1y
+│ └ ● [+15 more paths]
+├   /site/[tenant]/vastu
+│ ├ ● /site/high-properties/vastu                                                       5m      1y
+│ ├ ● /site/evergreen-real-estate/vastu                                                 5m      1y
+│ ├ ● /site/expert-realtors/vastu                                                       5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/vastu/[topic]
+│ ├ ● /site/high-properties/vastu/north-facing-house                                    5m      1y
+│ ├ ● /site/high-properties/vastu/north-facing-flat                                     5m      1y
+│ ├ ● /site/high-properties/vastu/north-facing-plot                                     5m      1y
+│ └ ● [+1217 more paths]
+├   /site/[tenant]/vastu/gurugram
+│ ├ ● /site/high-properties/vastu/gurugram                                              5m      1y
+│ ├ ● /site/evergreen-real-estate/vastu/gurugram                                        5m      1y
+│ ├ ● /site/expert-realtors/vastu/gurugram                                              5m      1y
+│ └ ● [+3 more paths]
+├   /site/[tenant]/vastu/gurugram/[sector]
+│ ├ ● /site/high-properties/vastu/gurugram/sector-1                                     5m      1y
+│ ├ ● /site/high-properties/vastu/gurugram/sector-2                                     5m      1y
+│ ├ ● /site/high-properties/vastu/gurugram/sector-3                                     5m      1y
+│ └ ● [+134 more paths]
+├   /site/[tenant]/vastu/gurugram/[sector]/[aspect]
+│ ├ ● /site/high-properties/vastu/gurugram/sector-1/north-facing                        5m      1y
+│ ├ ● /site/high-properties/vastu/gurugram/sector-1/north-east-facing                   5m      1y
+│ ├ ● /site/high-properties/vastu/gurugram/sector-1/east-facing                         5m      1y
+│ └ ● [+3559 more paths]
+├ ○ /sitemap.xml                                                                        1h      1y
+└ ƒ /sitemaps/[file]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

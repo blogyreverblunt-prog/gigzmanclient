@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { propertyManagementPageEnabled } from "@/lib/premium-v2/home-sections";
 import { MANAGEMENT_FAQS } from "@/lib/premium-v2/property-management";
 import { buildBreadcrumbJsonLd, buildFaqJsonLd, jsonLdProps } from "@/lib/schema-org";
@@ -24,7 +24,7 @@ interface Props {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || !propertyManagementPageEnabled(tenant.slug)) return {};
+  if (!tenant || !propertyManagementPageEnabled(tenant)) return {};
   const settings = await getFirmSettings(tenant.id);
   const firmName = settings?.firmName ?? "";
   const path = joinPath(basePathFor(tenant), "/property-management");
@@ -46,11 +46,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function PropertyManagementPage(props: Props) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
 
   // Allowlisted, not template-wide: every photograph on this page carries
   // High Properties' own branding.
-  if (!propertyManagementPageEnabled(tenant.slug)) notFound();
+  if (!propertyManagementPageEnabled(tenant)) notFound();
 
   const settings = await getFirmSettings(tenant.id);
   if (!settings) notFound();

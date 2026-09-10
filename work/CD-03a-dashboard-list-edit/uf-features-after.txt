@@ -1,0 +1,11 @@
+[
+ {
+  "features": {
+   "homeLoan": true,
+   "propertyMap": true,
+   "vastuSectors": false,
+   "propertyManagementPage": false,
+   "propertyManagementSection": false
+  }
+ }
+]

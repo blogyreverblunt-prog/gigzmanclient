@@ -13,6 +13,7 @@
 
 slug: expert-realtors
 vertical: realestate
+template: premium-v2
 display_name: Expert Realtors
 is_demo: false
 

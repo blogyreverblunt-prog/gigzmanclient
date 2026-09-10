@@ -1,0 +1,121 @@
+[
+ {
+  "slug": "high-properties",
+  "client_id": "1eb3b333-aacf-4e2a-bc0c-d8fca1eda9e7",
+  "firm_name": "High Properties",
+  "phone": "98215 53693",
+  "reviews_enabled": true,
+  "pricing_enabled": true,
+  "awards_enabled": false,
+  "client_logos_enabled": false,
+  "team_enabled": true,
+  "opening_hours": [
+   {
+    "day": "Monday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   },
+   {
+    "day": "Tuesday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   },
+   {
+    "day": "Wednesday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   },
+   {
+    "day": "Thursday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   },
+   {
+    "day": "Friday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   },
+   {
+    "day": "Saturday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   },
+   {
+    "day": "Sunday",
+    "opens": "11:00",
+    "closed": false,
+    "closes": "20:00"
+   }
+  ],
+  "social_links": {
+   "youtube": "https://www.youtube.com/@highproperties",
+   "facebook": "https://www.facebook.com/highproperties",
+   "linkedin": "https://www.linkedin.com/company/highproperties",
+   "instagram": "https://www.instagram.com/highproperties"
+  },
+  "updated_at": "2026-09-09T14:45:30.246Z"
+ },
+ {
+  "slug": "urban-flat-real-estate",
+  "client_id": "b9f9b149-d8ff-4a56-ba7c-93a24ccba1b3",
+  "firm_name": "Urban Flat Real Estate",
+  "phone": "097114 41113",
+  "reviews_enabled": true,
+  "pricing_enabled": true,
+  "awards_enabled": false,
+  "client_logos_enabled": false,
+  "team_enabled": false,
+  "opening_hours": [
+   {
+    "day": "Monday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   },
+   {
+    "day": "Tuesday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   },
+   {
+    "day": "Wednesday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   },
+   {
+    "day": "Thursday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   },
+   {
+    "day": "Friday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   },
+   {
+    "day": "Saturday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   },
+   {
+    "day": "Sunday",
+    "opens": "10:00",
+    "closed": false,
+    "closes": "19:30"
+   }
+  ],
+  "social_links": {},
+  "updated_at": "2026-09-10T07:19:27.320Z"
+ }
+]

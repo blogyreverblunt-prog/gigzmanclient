@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { buildBreadcrumbJsonLd, jsonLdProps } from "@/lib/schema-org";
 import { formatInr } from "@/lib/format";
 import RentalYieldCalculatorV2 from "@/components/realestate/premium-v2/tools/RentalYieldCalculatorV2";
@@ -29,7 +29,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function RentalYieldHubPage(props: Props) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
 
   const basePath = basePathFor(tenant);

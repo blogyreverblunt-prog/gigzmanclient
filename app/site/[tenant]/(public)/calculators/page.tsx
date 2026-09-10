@@ -8,7 +8,7 @@ import CalculatorPicker from "@/components/site/CalculatorPicker";
 import Illustration from "@/components/site/Illustration";
 import PremiumV2CalculatorsIndexPage from "@/components/realestate/premium-v2/PremiumV2CalculatorsIndexPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getCalculators } from "@/lib/content";
 import { CALCULATOR_STATUS_LABELS, formatDate } from "@/lib/format";
 import { getVerticalConfig } from "@/lib/verticals";
@@ -34,7 +34,7 @@ export default async function CalculatorsPage(props: PageProps<"/site/[tenant]/c
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2CalculatorsIndexPage tenant={tenant} />;
   }
 

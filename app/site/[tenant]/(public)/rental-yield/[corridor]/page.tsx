@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities, getLocality, getProperties } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { buildBreadcrumbJsonLd, buildFaqJsonLd, jsonLdProps } from "@/lib/schema-org";
 import { formatInr, formatIndianPrice } from "@/lib/format";
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CorridorYieldPage({ params }: Props) {
   const { tenant: tenantSlug, corridor } = await params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
 
   const basePath = basePathFor(tenant);
   const p = (path: string) => joinPath(basePath, path);

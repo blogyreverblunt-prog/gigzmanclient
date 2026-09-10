@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Building2, Compass, MapPin } from "lucide-react";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { vastuSectorsEnabled } from "@/lib/vastu/enabled";
 import { DIRECTIONS, ROOMS, VASTU_DISCLAIMER, findDirection, findRoom } from "@/lib/vastu";
@@ -27,7 +27,7 @@ const ASPECTS = sectorAspectSlugs(DIRECTION_SLUGS, ROOM_SLUGS);
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     const t = await getTenantBySlug(tenant.slug);
-    if (!t || t.vertical !== "realestate" || !vastuSectorsEnabled(t.slug)) return [];
+    if (!t || t.vertical !== "realestate" || !vastuSectorsEnabled(t)) return [];
     return SECTORS.flatMap((s) => ASPECTS.map((aspect) => ({ sector: s.slug, aspect })));
   });
 }
@@ -58,9 +58,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VastuSectorAspectPage({ params }: Props) {
   const { tenant: tenantSlug, sector: sectorSlug, aspect: aspectSlug } = await params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
-  if (!vastuSectorsEnabled(tenant.slug)) notFound();
+  if (!vastuSectorsEnabled(tenant)) notFound();
   const sector = findSector(sectorSlug);
   const aspect = resolveSectorAspect(aspectSlug, DIRECTION_SLUGS, ROOM_SLUGS);
   if (!sector || !aspect) notFound();

@@ -1,4 +1,5 @@
 import { homeLoanEnabled } from "@/lib/home-loan/enabled";
+import type { FeatureHost } from "@/lib/features";
 import { joinPath } from "@/lib/paths";
 
 /**
@@ -24,7 +25,7 @@ export interface ToolLink {
   path: string;
 }
 
-export function toolLinksFor(clientSlug: string | undefined | null): ToolLink[] {
+export function toolLinksFor(host: FeatureHost | null | undefined): ToolLink[] {
   return [
     {
       key: "emi",
@@ -33,7 +34,7 @@ export function toolLinksFor(clientSlug: string | undefined | null): ToolLink[] 
       blurb: "Monthly instalment, total interest and the full cost of the loan.",
       // Tenants with a lender relationship get the fuller financing hub;
       // everyone else gets the same calculator on its own page.
-      path: homeLoanEnabled(clientSlug) ? "/home-loan" : "/calculators/emi",
+      path: homeLoanEnabled(host) ? "/home-loan" : "/calculators/emi",
     },
     {
       key: "rental-yield",
@@ -60,8 +61,8 @@ export function toolLinksFor(clientSlug: string | undefined | null): ToolLink[] 
 }
 
 /** The same list with each `path` already joined onto the tenant's base path. */
-export function toolHrefsFor(clientSlug: string | undefined | null, basePath: string) {
-  return toolLinksFor(clientSlug).map((tool) => ({
+export function toolHrefsFor(host: FeatureHost | null | undefined, basePath: string) {
+  return toolLinksFor(host).map((tool) => ({
     ...tool,
     href: joinPath(basePath, tool.path),
   }));

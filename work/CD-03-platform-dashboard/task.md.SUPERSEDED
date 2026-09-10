@@ -1,0 +1,18 @@
+SUPERSEDED — split into two increments after manager/user review.
+
+The original CD-03 was ~3x the size of anything verified in this pipeline so far,
+and both CD-01 and CD-02 needed rework cycles at roughly a third of that size.
+Split so each half gets its own plan, its own verification and a diff small
+enough to review honestly:
+
+  work/CD-03a-dashboard-list-edit/task.md   list + edit existing clients,
+                                            feature toggles + guards,
+                                            the revalidation tag,
+                                            two standing findings
+  work/CD-03b-create-wizard/task.md         the create wizard, transaction,
+                                            generated admin password,
+                                            sitemap filter for half-configured
+                                            clients
+
+CD-03a delivers value on its own: every client visible and editable from one
+gated screen. CD-03b is what makes onboarding possible without a developer.

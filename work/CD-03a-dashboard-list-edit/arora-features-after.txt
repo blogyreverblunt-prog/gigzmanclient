@@ -1,0 +1,8 @@
+[
+ {
+  "slug": "arora-k-associates",
+  "vertical": "cafirm",
+  "template_key": null,
+  "features": {}
+ }
+]

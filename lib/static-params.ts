@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { clients } from "@/lib/db/schema";
+import type { ClientFeatures } from "@/lib/features";
 
 /**
  * Helpers for `generateStaticParams` on nested dynamic routes.
@@ -28,10 +29,48 @@ const TENANT_ONLY = (process.env.TENANT_ONLY ?? "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-export async function activeTenants(): Promise<{ id: string; slug: string }[]> {
+/**
+ * What `generateStaticParams` needs about a tenant: enough to gate on its
+ * template without a second query.
+ *
+ * `vertical` and `templateKey` are here because two routes — `builders/[slug]`
+ * and `sectors/[sector]` — gate on the template *inside*
+ * `generateStaticParams`, on the object `paramsForEachTenant` hands them.
+ * While the assignment lived in a slug-keyed map, `slug` was enough. Now it is
+ * a column, and a projection missing it makes `templateKeyFor()` return
+ * `undefined` for every tenant, so both routes return `[]` and prerender
+ * nothing while the build still reports success.
+ *
+ * `features` is here for the same reason, one increment later, and it is the
+ * second time this projection has had to widen to stop exactly that failure.
+ * `home-loan/[slug]` and `home-loan/[slug]/[amount]` gate inside
+ * `generateStaticParams` on the object handed to them here, so a projection
+ * without `features` makes `homeLoanEnabled()` answer for the defaults rather
+ * than for the tenant, both families return `[]`, and roughly 1,050 pages per
+ * DSA tenant quietly stop being prerendered while the build still reports
+ * success. `FeatureHost` in `lib/features.ts` requires `features` rather than
+ * marking it optional precisely so that omission is a type error here instead
+ * of silence there. Anything a `generateStaticParams` gate reads has to be in
+ * this select.
+ */
+export type StaticParamTenant = {
+  id: string;
+  slug: string;
+  vertical: string;
+  templateKey: string | null;
+  features: ClientFeatures;
+};
+
+export async function activeTenants(): Promise<StaticParamTenant[]> {
   try {
     const rows = await db
-      .select({ id: clients.id, slug: clients.slug })
+      .select({
+        id: clients.id,
+        slug: clients.slug,
+        vertical: clients.vertical,
+        templateKey: clients.templateKey,
+        features: clients.features,
+      })
       .from(clients)
       .where(eq(clients.isActive, true));
     return TENANT_ONLY.length > 0 ? rows.filter((r) => TENANT_ONLY.includes(r.slug)) : rows;
@@ -42,7 +81,7 @@ export async function activeTenants(): Promise<{ id: string; slug: string }[]> {
 
 /** Builds `{ tenant, ...child }` rows from a per-tenant lookup. */
 export async function paramsForEachTenant<T extends Record<string, string>>(
-  rowsFor: (tenant: { id: string; slug: string }) => Promise<T[]>,
+  rowsFor: (tenant: StaticParamTenant) => Promise<T[]>,
 ): Promise<({ tenant: string } & T)[]> {
   const tenants = await activeTenants();
   const out: ({ tenant: string } & T)[] = [];

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { AREA_UNITS, convertArea, findUnit, formatArea, pairSlug, unitPairs } from "@/lib/calculators/area-units";
 import { buildBreadcrumbJsonLd, buildFaqJsonLd, jsonLdProps } from "@/lib/schema-org";
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AreaPairPage({ params }: Props) {
   const { tenant: tenantSlug, pair } = await params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
   const resolved = resolve(pair);
   if (!resolved) notFound();

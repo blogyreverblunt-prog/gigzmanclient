@@ -7,7 +7,7 @@ import PropertyTypeIcon from "@/components/realestate/PropertyTypeIcon";
 import HeroSearchBar from "@/components/realestate/HeroSearchBar";
 import PremiumV2LocalitiesIndexPage from "@/components/realestate/premium-v2/PremiumV2LocalitiesIndexPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getLocalities, getPropertyLocalityFacets } from "@/lib/content";
 import { PROPERTY_TYPE_LABELS } from "@/lib/format";
 import { buildBreadcrumbJsonLd, buildItemListJsonLd, jsonLdProps } from "@/lib/schema-org";
@@ -42,7 +42,7 @@ export default async function LocalitiesPage(props: PageProps<"/site/[tenant]/lo
     getPropertyLocalityFacets(tenant.id),
   ]);
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2LocalitiesIndexPage localities={localities} basePath={basePath} />;
   }
 

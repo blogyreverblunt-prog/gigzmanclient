@@ -70,7 +70,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang="en" className={`${fontVariables} h-full`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* Browser extensions rewrite <body> before React hydrates — ColorZilla
+          adds `cz-shortcut-listen`, password managers and translators add
+          their own — and React reports the difference as a hydration
+          mismatch. Nothing the page serves can prevent it: extensions run on
+          the user's own authority, above the document's. Suppression here is
+          one level deep, covering only <body>'s own attributes, so a genuine
+          mismatch anywhere inside the app still surfaces. */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

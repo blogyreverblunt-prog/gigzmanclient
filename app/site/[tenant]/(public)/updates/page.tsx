@@ -6,7 +6,7 @@ import Badge from "@/components/ui/Badge";
 import Illustration from "@/components/site/Illustration";
 import PremiumV2UpdatesIndexPage from "@/components/realestate/premium-v2/PremiumV2UpdatesIndexPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getPublishedUpdates } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 
@@ -30,7 +30,7 @@ export default async function UpdatesPage(props: PageProps<"/site/[tenant]/updat
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2UpdatesIndexPage tenant={tenant} searchParams={searchParams} />;
   }
 

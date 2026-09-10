@@ -25,7 +25,7 @@ export default async function PremiumV2EmiCalculatorPage({ tenant }: { tenant: T
   if (!calculator || calculator.status === "archived") notFound();
 
   const needsReview = calculator.status !== "active" || !calculator.reviewerName;
-  const others = toolHrefsFor(tenant.slug, basePath).filter((tool) => tool.key !== "emi");
+  const others = toolHrefsFor(tenant, basePath).filter((tool) => tool.key !== "emi");
 
   return (
     <>

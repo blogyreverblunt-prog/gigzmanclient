@@ -65,8 +65,9 @@ export function proxy(request: NextRequest) {
   const segments = pathname.split("/").filter(Boolean);
   const [vertical, slug, ...rest] = segments;
 
-  // The bare root is the single gated dashboard (app/page.tsx) — team-only,
-  // requires a client ID typed in by hand, never lists clients.
+  // The bare root is the single gated dashboard (app/page.tsx) — team-only, and
+  // since CD-03a it lists every client rather than requiring a slug typed in by
+  // hand. Reached only through `requirePlatformAdmin`.
   if (segments.length === 0) return NextResponse.next();
 
   // Files served from public/ live at the root and carry an extension. Without
@@ -84,6 +85,15 @@ export function proxy(request: NextRequest) {
   // generic "unknown vertical" redirect below, landing on "/" like any
   // other unrecognised path.
   if (vertical === "login") return NextResponse.next();
+
+  // The platform dashboard's client screens (app/clients/**) — team-only, same
+  // gate as `/`. Exempted here for the same reason as `login` above: "clients"
+  // is not a registered vertical id, so without this the generic unknown-vertical
+  // redirect below would bounce every one of these URLs to `/` with nothing
+  // saying why. No conflict with a tenant URL: segment 0 is always the vertical,
+  // never a client slug. Path mode only — in host mode every path belongs to the
+  // one client that domain serves, and there is no platform dashboard there.
+  if (vertical === "clients") return NextResponse.next();
 
   if (!vertical || !isVerticalId(vertical)) {
     // An unknown vertical segment would otherwise render a tenant page with

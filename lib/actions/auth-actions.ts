@@ -27,7 +27,16 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   const tenantSlug = h.get("x-tenant");
   if (!tenantSlug) return { error: "Sign-in is unavailable on this address." };
 
-  const [tenant] = await db.select().from(clients).where(eq(clients.slug, tenantSlug)).limit(1);
+  // `isActive` in the predicate: a deactivated tenant's staff must not be able
+  // to obtain a NEW session either, or deactivation would only expire the
+  // sessions that already existed. Same message as an unknown tenant, so the
+  // form cannot be used to probe which clients exist. See lib/tenant.ts's
+  // `isActive` comment for the full list of paths carrying this predicate.
+  const [tenant] = await db
+    .select()
+    .from(clients)
+    .where(and(eq(clients.slug, tenantSlug), eq(clients.isActive, true)))
+    .limit(1);
   if (!tenant) return { error: "Sign-in is unavailable on this address." };
 
   const [user] = await db

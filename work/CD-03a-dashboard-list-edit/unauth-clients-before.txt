@@ -1,0 +1,15 @@
+[
+ {
+  "slug": "urban-flat-real-estate",
+  "display_name": "Urban Flat Real Estate",
+  "custom_domain": null,
+  "is_active": true,
+  "features": {
+   "homeLoan": true,
+   "propertyMap": true,
+   "vastuSectors": false,
+   "propertyManagementPage": false,
+   "propertyManagementSection": false
+  }
+ }
+]

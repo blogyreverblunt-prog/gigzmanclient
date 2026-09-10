@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Map } from "lucide-react";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities, getProperties, getPropertyImagesFor } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { MAP_AREAS, AREA_KIND_LABELS, findMapArea, mapImageSrc } from "@/lib/maps/areas";
 import blurPlaceholders from "@/lib/maps/blur-placeholders.json";
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PlotMapPage({ params }: Props) {
   const { tenant: tenantSlug, area: areaSlug } = await params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
   const area = findMapArea(areaSlug);
   if (!area) notFound();

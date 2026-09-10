@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Illustration from "@/components/site/Illustration";
 import PremiumV2AboutPage from "@/components/realestate/premium-v2/PremiumV2AboutPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getTeam, getServices } from "@/lib/content";
 import { SERVICE_CATEGORY_LABELS, formatDate } from "@/lib/format";
 
@@ -42,7 +42,7 @@ export default async function FirmProfilePage(props: PageProps<"/site/[tenant]/f
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2AboutPage tenant={tenant} />;
   }
 

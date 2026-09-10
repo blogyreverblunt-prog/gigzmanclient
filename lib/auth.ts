@@ -81,10 +81,17 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const h = await headers();
   const tenantSlug = h.get("x-tenant");
   if (tenantSlug) {
+    // `isActive` in the predicate, not just `slug`: a deactivated tenant is off
+    // the air for writes as well as renders, and this is the one query every
+    // dashboard Server Action resolves its user through. Without it a live
+    // `gz_session` issued before deactivation still passed `requireUser` /
+    // `requireAdmin`, so nothing rendered but everything still saved. Resolving
+    // to no user is what makes those throw. See lib/tenant.ts's `isActive`
+    // comment for the full list of paths carrying this predicate.
     const [tenant] = await db
       .select()
       .from(clients)
-      .where(eq(clients.slug, tenantSlug))
+      .where(and(eq(clients.slug, tenantSlug), eq(clients.isActive, true)))
       .limit(1);
     if (!tenant || tenant.id !== row.clientId) return null;
   }

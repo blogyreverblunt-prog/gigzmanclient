@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Building2, Compass, Ruler } from "lucide-react";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import {
   DIRECTIONS, ROOMS, VASTU_CONTEXTS, VASTU_DISCLAIMER,
@@ -233,7 +233,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function VastuTopicPage({ params }: Props) {
   const { tenant: tenantSlug, topic } = await params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
   const resolved = resolve(topic);
   if (!resolved) notFound();

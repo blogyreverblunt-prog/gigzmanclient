@@ -20,7 +20,7 @@ export default async function PremiumV2CalculatorsIndexPage({ tenant }: { tenant
   const settings = await getFirmSettings(tenant.id);
   if (!settings) return null;
 
-  const tools = toolHrefsFor(tenant.slug, basePath);
+  const tools = toolHrefsFor(tenant, basePath);
 
   return (
     <div className="gp-section bg-[color:var(--gp-cream-100)]">

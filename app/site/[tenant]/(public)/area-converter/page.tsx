@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { ArrowLeftRight } from "lucide-react";
 import { AREA_UNITS, convertArea, formatArea, pairSlug } from "@/lib/calculators/area-units";
 import RelatedCardsV2 from "@/components/realestate/premium-v2/RelatedCardsV2";
@@ -31,7 +31,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function AreaConverterHubPage(props: Props) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
 
   const basePath = basePathFor(tenant);

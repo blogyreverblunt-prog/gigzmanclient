@@ -1,0 +1,36 @@
+### status sweep (before)
+200 /realestate/temp-premium-v2/high-properties
+200 /realestate/temp-premium-v2/high-properties/properties
+200 /realestate/temp-premium-v2/high-properties/services
+200 /realestate/temp-premium-v2/high-properties/contact
+200 /realestate/temp-premium-v2/evergreen-real-estate
+200 /realestate/temp-premium-v2/evergreen-real-estate/properties
+200 /realestate/temp-premium-v2/evergreen-real-estate/services
+200 /realestate/temp-premium-v2/evergreen-real-estate/contact
+200 /realestate/temp-premium-v2/expert-realtors
+200 /realestate/temp-premium-v2/expert-realtors/properties
+200 /realestate/temp-premium-v2/expert-realtors/services
+200 /realestate/temp-premium-v2/expert-realtors/contact
+200 /realestate/temp-premium-v2/nayra-realtors
+200 /realestate/temp-premium-v2/nayra-realtors/properties
+200 /realestate/temp-premium-v2/nayra-realtors/services
+200 /realestate/temp-premium-v2/nayra-realtors/contact
+200 /realestate/temp-premium-v2/urban-flat-real-estate
+200 /realestate/temp-premium-v2/urban-flat-real-estate/properties
+200 /realestate/temp-premium-v2/urban-flat-real-estate/services
+200 /realestate/temp-premium-v2/urban-flat-real-estate/contact
+200 /cafirm/arora-k-associates
+200 /cafirm/arora-k-associates/properties
+200 /cafirm/arora-k-associates/services
+200 /cafirm/arora-k-associates/contact
+### data-template / data-vertical / gp-container (before)
+high-properties data-template=data-template="premium-v2" data-vertical=data-vertical="realestate" gp-container=2
+evergreen-real-estate data-template=data-template="premium-v2" data-vertical=data-vertical="realestate" gp-container=2
+expert-realtors data-template=data-template="premium-v2" data-vertical=data-vertical="realestate" gp-container=2
+nayra-realtors data-template=data-template="premium-v2" data-vertical=data-vertical="realestate" gp-container=2
+urban-flat-real-estate data-template=data-template="premium-v2" data-vertical=data-vertical="realestate" gp-container=2
+arora-k-associates data-template=[] data-vertical=data-vertical="cafirm" gp-container=1
+### negative cases (before)
+307 /realestate/temp-luxury-showcase/high-properties
+307 /site/high-properties
+200 /cafirm/high-properties

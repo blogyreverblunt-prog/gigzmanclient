@@ -15,6 +15,7 @@ import {
   localities,
 } from "@/lib/db/schema";
 import { todayInIst } from "@/lib/format";
+import { tenantDataTag } from "@/lib/cache-tags";
 
 /**
  * Read-side data access for the public site. Every function is scoped by
@@ -27,8 +28,16 @@ import { todayInIst } from "@/lib/format";
  *    pooler is in ap-southeast-2, so every uncached query pays a cross-region
  *    round trip. A page making a dozen of those is why pages took seconds.
  *
- * `REVALIDATE_SECONDS` is the staleness the dashboard tolerates — an edit
- * shows up within this window rather than instantly.
+ * `REVALIDATE_SECONDS` is how long an UNOBSERVED change may go unnoticed. It is
+ * no longer the latency of a dashboard edit: the clientId-scoped reads below
+ * carry `tenantDataTag(clientId)` and the platform actions in
+ * lib/actions/platform-actions.ts expire it on save, so an edit is live on the
+ * next request. Note that the tenant dashboard's own actions do NOT yet do
+ * this — see lib/actions/dashboard-actions.ts, whose ~30 `revalidatePath`
+ * calls name paths (`"/site"`, `"/site/properties"`, …) that are not real
+ * rendered routes and therefore match no tag at all. So for now the two write
+ * surfaces behave differently: a platform edit propagates in seconds, a tenant
+ * edit does not propagate at all and waits out this window. CD-03c repairs it.
  */
 const REVALIDATE_SECONDS = 300;
 
@@ -40,22 +49,57 @@ function cached<Args extends unknown[], T>(
   return unstable_cache(fn, keyParts, { revalidate: REVALIDATE_SECONDS });
 }
 
-export const getFirmSettings = cache(cached(async (clientId: string) => {
-  const [row] = await db
-    .select()
-    .from(firmSettings)
-    .where(eq(firmSettings.clientId, clientId))
-    .limit(1);
-  return row ?? null;
-}, ["firm-settings"]));
+/**
+ * Cross-request cache for a read scoped to one client, tagged so a platform edit
+ * can expire exactly that client's entries.
+ *
+ * Same shape and same reason as `lookupClientBySlug` in lib/tenant.ts: the cache
+ * is built per call because `unstable_cache`'s tags are fixed at wrap time, and
+ * `clientId` is in the key parts because the inner closure takes no arguments
+ * and stringifies identically for every tenant. Drop it and all six tenants
+ * share one entry — one client's rows served on another client's site.
+ *
+ * A tagged entry also tags the render that read it: `unstable_cache` pushes its
+ * tags onto the enclosing render's work-unit store, so the ISR entry for every
+ * page under app/site/[tenant]/(public)/ inherits this tag through the layout's
+ * `getFirmSettings` call. One `updateTag` therefore expires this tenant's cached
+ * rows AND its prerendered HTML, and no other tenant's.
+ */
+function cachedForClient<T>(keyPart: string, clientId: string, fn: () => Promise<T>): Promise<T> {
+  return unstable_cache(fn, [keyPart, clientId], {
+    revalidate: REVALIDATE_SECONDS,
+    tags: [tenantDataTag(clientId)],
+  })();
+}
 
-export const getTeam = cache(cached(async (clientId: string) =>
-  db
-    .select()
-    .from(teamMembers)
-    .where(and(eq(teamMembers.clientId, clientId), eq(teamMembers.isActive, true)))
-    .orderBy(asc(teamMembers.sortOrder)),
-["team"]));
+export const getFirmSettings = cache(async (clientId: string) =>
+  cachedForClient("firm-settings", clientId, async () => {
+    const [row] = await db
+      .select()
+      .from(firmSettings)
+      .where(eq(firmSettings.clientId, clientId))
+      .limit(1);
+    return row ?? null;
+  }),
+);
+
+/**
+ * `getTeam`, `getCalculators` and `getLocalities` carry the tenant tag even
+ * though nothing in CD-03a writes those tables. That is not scaffolding: the
+ * tag IS called, by every platform save. It is deliberate over-invalidation —
+ * one extra cross-region query per tenant on the first request after a rare
+ * operator edit, in exchange for a tag that means "this tenant's cached
+ * read-side data" rather than "two particular functions".
+ */
+export const getTeam = cache(async (clientId: string) =>
+  cachedForClient("team", clientId, async () =>
+    db
+      .select()
+      .from(teamMembers)
+      .where(and(eq(teamMembers.clientId, clientId), eq(teamMembers.isActive, true)))
+      .orderBy(asc(teamMembers.sortOrder)),
+  ),
+);
 
 export const getServices = cache(async (clientId: string) =>
   db
@@ -166,13 +210,15 @@ export const getLegalPage = cache(async (clientId: string, slug: string) => {
   return row ?? null;
 });
 
-export const getCalculators = cache(cached(async (clientId: string) =>
-  db
-    .select()
-    .from(calculators)
-    .where(eq(calculators.clientId, clientId))
-    .orderBy(asc(calculators.sortOrder)),
-["calculators"]));
+export const getCalculators = cache(async (clientId: string) =>
+  cachedForClient("calculators", clientId, async () =>
+    db
+      .select()
+      .from(calculators)
+      .where(eq(calculators.clientId, clientId))
+      .orderBy(asc(calculators.sortOrder)),
+  ),
+);
 
 export const getCalculator = cache(async (clientId: string, key: string) => {
   const [row] = await db
@@ -259,6 +305,14 @@ export const getAllProperties = cache(async (clientId: string) =>
  * Callers used to map over a property list awaiting `getPropertyImages` per
  * row — twelve round trips on the homepage alone, each crossing regions.
  * Returns a map keyed by propertyId so call sites keep the same shape.
+ *
+ * Keeps the untagged `cached()` helper, and cannot use `cachedForClient`: it is
+ * keyed by property ids and never receives a `clientId`, so it has nothing to
+ * name a tenant tag with. Nothing writes property images in CD-03a, so no
+ * behaviour is wrong today — but whoever adds a property-image write path
+ * should know that `tenantDataTag` does not reach this entry. Inventing a
+ * `clientId` parameter here would change twelve call sites for no behaviour
+ * this increment needs.
  */
 export const getPropertyImagesFor = cache(
   cached(async (propertyIds: string[]) => {
@@ -294,13 +348,15 @@ export const getPropertyLocalityFacets = cache(async (clientId: string) => {
   return rows.map((r) => r.locality).filter((v): v is string => Boolean(v));
 });
 
-export const getLocalities = cache(cached(async (clientId: string) =>
-  db
-    .select()
-    .from(localities)
-    .where(and(eq(localities.clientId, clientId), eq(localities.isPublished, true)))
-    .orderBy(asc(localities.sortOrder)),
-["localities"]));
+export const getLocalities = cache(async (clientId: string) =>
+  cachedForClient("localities", clientId, async () =>
+    db
+      .select()
+      .from(localities)
+      .where(and(eq(localities.clientId, clientId), eq(localities.isPublished, true)))
+      .orderBy(asc(localities.sortOrder)),
+  ),
+);
 
 export const getAllLocalities = cache(async (clientId: string) =>
   db.select().from(localities).where(eq(localities.clientId, clientId)).orderBy(asc(localities.sortOrder)),

@@ -6,7 +6,7 @@ import QueryForm from "@/components/site/QueryForm";
 import Illustration from "@/components/site/Illustration";
 import PremiumV2ContactPage from "@/components/realestate/premium-v2/PremiumV2ContactPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getServices } from "@/lib/content";
 
 export async function generateMetadata(props: PageProps<"/site/[tenant]/contact">) {
@@ -28,7 +28,7 @@ export default async function ContactPage(props: PageProps<"/site/[tenant]/conta
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2ContactPage tenant={tenant} searchParams={searchParams} />;
   }
 

@@ -1,11 +1,11 @@
 import { getTenant } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import PropertyListSkeletonV2 from "@/components/realestate/premium-v2/PropertyListSkeletonV2";
 
 export default async function PropertiesLoading() {
   const tenant = await getTenant();
 
-  if (getTemplateKeyForSlug(tenant?.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return (
       <div className="gp-section bg-[color:var(--gp-cream-100)]">
         <div className="gp-container">

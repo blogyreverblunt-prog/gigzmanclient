@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import PremiumV2PropertiesPage from "@/components/realestate/premium-v2/PremiumV2PropertiesPage";
 import { getTenantBySlug } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { getFirmSettings, getProperties } from "@/lib/content";
 import { developerSlug } from "@/lib/register";
@@ -26,7 +26,7 @@ async function resolveDeveloper(tenantId: string, slug: string) {
 
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
-    if (getTemplateKeyForSlug(tenant.slug) !== "premium-v2") return [];
+    if (templateKeyFor(tenant) !== "premium-v2") return [];
     const rows = await getProperties(tenant.id);
     // One-project developers get no page: it would duplicate the listing it links to.
     const counts = new Map<string, number>();
@@ -55,7 +55,7 @@ export async function generateMetadata(props: PageProps<"/site/[tenant]/builders
 export default async function BuilderPage(props: PageProps<"/site/[tenant]/builders/[slug]">) {
   const { tenant: tenantSlug, slug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
 
   const name = await resolveDeveloper(tenant.id, slug);
   if (!name) notFound();

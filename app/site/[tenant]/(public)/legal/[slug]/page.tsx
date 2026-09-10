@@ -3,7 +3,7 @@ import { marked } from "marked";
 import Section from "@/components/ui/Section";
 import PremiumV2LegalPage from "@/components/realestate/premium-v2/PremiumV2LegalPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getLegalPage } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 
@@ -26,7 +26,7 @@ export default async function LegalPage(props: PageProps<"/site/[tenant]/legal/[
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2LegalPage tenant={tenant} slug={slug} />;
   }
 

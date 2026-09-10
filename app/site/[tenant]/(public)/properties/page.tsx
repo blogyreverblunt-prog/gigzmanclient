@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import PremiumV2PropertiesPage from "@/components/realestate/premium-v2/PremiumV2PropertiesPage";
 import { getTenantBySlug } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings } from "@/lib/content";
 
 /**
@@ -39,7 +39,7 @@ export async function generateMetadata(props: PageProps<"/site/[tenant]/properti
 export default async function PropertiesPage(props: PageProps<"/site/[tenant]/properties">) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
 
   return <PremiumV2PropertiesPage tenant={tenant} />;
 }

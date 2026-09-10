@@ -26,6 +26,7 @@ import {
   REALESTATE_RATES_VERSION,
   TAX_YEAR,
 } from "../lib/calculators/registry";
+import { TEMPLATE_REGISTRY } from "../lib/templates";
 
 /**
  * Loads a client folder into the database.
@@ -58,21 +59,85 @@ async function main() {
   const profile = readYaml<any>("profile.yaml");
   if (!profile) throw new Error("profile.yaml is required");
 
+  // The template assignment lives on the row since CD-01, and `profile.template`
+  // is the bootstrap value for it. Validated against the registry *before*
+  // anything is written, because seeding is the documented onboarding path
+  // (AGENTS.md "Adding a tenant") and `lib/tenant.ts` 404s a realestate tenant
+  // whose value it does not recognise. Without this check a typo — `premiumv2`,
+  // a stray trailing space, the wrong case — seeds successfully, exits 0, and
+  // leaves a dead site with no diagnostic anywhere.
+  //
+  // A MISSING template is exactly as fatal as an invalid one for a realestate
+  // profile, and it has to be checked here rather than left to look like an
+  // omission: `lib/tenant.ts` 404s on a null `template_key` by the same rule it
+  // 404s on an unrecognised one, so a realestate profile.yaml with no
+  // `template:` key would otherwise seed successfully, exit 0, and produce the
+  // same silent dead site this validation exists to prevent.
+  //
+  // A cafirm profile naming no template stays valid: null is the correct answer
+  // for that vertical, not a missing value. Which is why the check is predicated
+  // on the vertical rather than on the key simply being present.
+  //
+  // An empty or whitespace-only value counts as missing. A non-empty one is
+  // NOT trimmed before the registry lookup, deliberately: `"premium-v2 "` must
+  // still fail as unrecognised rather than be quietly repaired into validity.
+  const vertical: string = profile.vertical ?? "cafirm";
+  const rawTemplate = profile.template ?? null;
+  const templateKey: string | null =
+    rawTemplate === null || String(rawTemplate).trim() === "" ? null : rawTemplate;
+
+  const missingForRealestate = vertical === "realestate" && templateKey === null;
+  const unrecognised = templateKey !== null && !Object.hasOwn(TEMPLATE_REGISTRY, templateKey);
+  if (missingForRealestate || unrecognised) {
+    throw new Error(
+      (missingForRealestate
+        ? `profile.yaml sets vertical: "realestate" but names no template, which is not a `
+        : `profile.yaml sets template: ${JSON.stringify(profile.template)}, which is not a `) +
+        `template this codebase can render. Valid keys: ${Object.keys(TEMPLATE_REGISTRY).join(", ")}. ` +
+        `Nothing was written.`,
+    );
+  }
+
   // ---------------------------------------------------------------- client
+  //
+  // `clients.features` is deliberately NOT seeded from YAML, and this is the
+  // one place a reader is likely to add it by mistake. Two reasons:
+  //
+  // 1. The name is already taken by something else. `profile.yaml`'s top-level
+  //    `features:` block is the FIRM-SETTINGS booleans — reviews, pricing,
+  //    awards, client_logos, team — read below as `settingsFeatures` and
+  //    written to `firm_settings`. Wiring `features: profile.features` into
+  //    the values below would put `{"reviews":true,...}` into
+  //    `clients.features`, `featureEnabled()` would find none of its five keys,
+  //    and every tenant would silently fall back to the documented defaults
+  //    while a `select` showed the column looking populated.
+  // 2. Omitting it costs nothing. A tenant seeded without one gets `'{}'`,
+  //    which means "every documented default" in `lib/features.ts` — map on,
+  //    the three branded/regulated/expensive families off. That is the correct
+  //    answer for a new client, and because `features` is absent from the
+  //    `onConflictDoUpdate` set block, re-seeding an existing client cannot
+  //    null out a live flag.
+  //
+  // CD-03's platform dashboard owns the write path for these.
   const [client] = await db
     .insert(clients)
     .values({
       slug: profile.slug,
-      vertical: profile.vertical ?? "cafirm",
+      vertical,
       displayName: profile.display_name,
       isDemo: profile.is_demo ?? false,
+      templateKey,
     })
     .onConflictDoUpdate({
       target: clients.slug,
       set: {
         displayName: profile.display_name,
-        vertical: profile.vertical ?? "cafirm",
+        vertical,
         isDemo: profile.is_demo ?? false,
+        // Written only when the YAML actually names one, so re-seeding a client
+        // whose profile.yaml predates this field cannot null out a live
+        // assignment.
+        ...(templateKey ? { templateKey } : {}),
       },
     })
     .returning();
@@ -83,7 +148,11 @@ async function main() {
   // --------------------------------------------------------- firm settings
   const contact = profile.contact ?? {};
   const firm = profile.firm ?? {};
-  const features = profile.features ?? {};
+  // NOT `clients.features`. `profile.yaml`'s top-level `features:` block is the
+  // FIRM-SETTINGS booleans (reviews, pricing, awards, client_logos, team) and
+  // goes to `firm_settings` below. Named apart on purpose -- see the comment on
+  // the clients upsert above.
+  const settingsFeatures = profile.features ?? {};
 
   const settingsValues = {
     clientId,
@@ -111,11 +180,11 @@ async function main() {
     searchConsoleVerification: profile.analytics?.search_console_verification || null,
     seoTitle: profile.seo?.title ?? null,
     seoDescription: profile.seo?.description ?? null,
-    reviewsEnabled: features.reviews ?? false,
-    pricingEnabled: features.pricing ?? true,
-    awardsEnabled: features.awards ?? true,
-    clientLogosEnabled: features.client_logos ?? true,
-    teamEnabled: features.team ?? true,
+    reviewsEnabled: settingsFeatures.reviews ?? false,
+    pricingEnabled: settingsFeatures.pricing ?? true,
+    awardsEnabled: settingsFeatures.awards ?? true,
+    clientLogosEnabled: settingsFeatures.client_logos ?? true,
+    teamEnabled: settingsFeatures.team ?? true,
     notificationEmail: profile.notification_email || null,
     updatedAt: new Date(),
   };

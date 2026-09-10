@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { SECTORS } from "@/lib/vastu/sectors";
 import { VASTU_DISCLAIMER } from "@/lib/vastu";
 import { MARKET_PROVENANCE } from "@/lib/vastu/sector-content";
@@ -34,9 +34,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function VastuGurugramIndexPage(props: Props) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
-  if (!vastuSectorsEnabled(tenant.slug)) notFound();
+  if (!vastuSectorsEnabled(tenant)) notFound();
 
   const localities = await getLocalities(tenant.id);
   const basePath = basePathFor(tenant);

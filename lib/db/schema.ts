@@ -12,6 +12,7 @@ import {
   jsonb,
   unique,
 } from "drizzle-orm/pg-core";
+import type { ClientFeatures } from "@/lib/features";
 
 /**
  * Every content table is scoped by `clientId` so a single deployment can serve
@@ -86,6 +87,45 @@ export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: varchar("slug", { length: 120 }).notNull().unique(),
   vertical: varchar("vertical", { length: 60 }).notNull().default("cafirm"),
+  /**
+   * Which template in `lib/templates` TEMPLATE_REGISTRY this tenant renders.
+   *
+   * Nullable because only `realestate` carries a template today — a `cafirm`
+   * tenant has none, and null is the correct answer, not a missing value.
+   * A `realestate` row with a null (or unrecognised) value 404s in
+   * `getTenantBySlug`; it does not render untemplated under another client's
+   * chrome.
+   *
+   * `varchar`, not a `pgEnum`: the valid set is the code-side registry, so
+   * shipping a second template must not require a migration, and the check
+   * belongs in `templateKeyFor()` where the registry lives. 60 chars matches
+   * `vertical`.
+   */
+  templateKey: varchar("template_key", { length: 60 }),
+  /**
+   * Per-client feature gates. Five booleans that decide which optional
+   * premium-v2 sections and route families this tenant publishes.
+   *
+   * The reasoning for each flag lives next to its accessor
+   * (`lib/premium-v2/home-sections.ts`, `lib/vastu/enabled.ts`,
+   * `lib/home-loan/enabled.ts`) — two of them are not preferences: home-loan
+   * asserts a DSA relationship, and vastu sectors has already failed a deploy.
+   *
+   * jsonb rather than five boolean columns because the set grows (CD-03 and
+   * CD-07 add more) and a flag should not cost a migration. It is NOT hiding a
+   * relationship: this is a closed set of booleans owned by exactly one row,
+   * with no cardinality, no history and no query predicate — nothing here is
+   * ever a `WHERE` clause. Do not put anything relational in it.
+   *
+   * `notNull().default({})` so a row created without one is well-defined:
+   * `{}` means "every documented default", not "unknown". The defaults are NOT
+   * uniform — `propertyMap` defaults true, the other four false — and they are
+   * declared once in `FEATURE_DEFAULTS`.
+   *
+   * Read only through `featureEnabled()`. jsonb has no type checking, so a
+   * hand-written `"yes"`, `1` or `null` must not reach a boolean gate.
+   */
+  features: jsonb("features").$type<ClientFeatures>().notNull().default({}),
   displayName: text("display_name").notNull(),
   customDomain: varchar("custom_domain", { length: 255 }),
   isActive: boolean("is_active").notNull().default(true),

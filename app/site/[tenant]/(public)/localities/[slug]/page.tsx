@@ -8,7 +8,7 @@ import PropertyCard from "@/components/realestate/PropertyCard";
 import PremiumV2LocalityDetailPage from "@/components/realestate/premium-v2/PremiumV2LocalityDetailPage";
 import { ogFor } from "@/lib/og";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { getFirmSettings, getLocalities, getLocality, getProperties, getPropertyImages } from "@/lib/content";
 import { formatIndianPrice, formatDate } from "@/lib/format";
@@ -56,7 +56,7 @@ export default async function LocalityDetailPage(props: PageProps<"/site/[tenant
   const locality = await getLocality(tenant.id, slug);
   if (!locality) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     const allLocalities = await getLocalities(tenant.id);
     const otherLocalities = allLocalities.filter((l) => l.slug !== locality.slug);
     return (

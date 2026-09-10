@@ -8,7 +8,6 @@ import { joinPath } from "@/lib/paths";
 import WhatsAppIconV2 from "./WhatsAppIconV2";
 import SocialIconV2 from "./SocialIconV2";
 import { NoiseTextureV2 } from "./NoiseTextureV2";
-import { homeLoanEnabled } from "@/lib/home-loan/enabled";
 import type { getFirmSettings } from "@/lib/content";
 
 const EYEBROW = "text-[15px] font-extrabold uppercase tracking-[0.16em] text-[color:var(--gp-gold-300)]";
@@ -28,10 +27,15 @@ interface FooterLink {
 interface FooterV2Props {
   settings: Awaited<ReturnType<typeof getFirmSettings>>;
   basePath: string;
-  clientSlug: string;
+  /**
+   * Computed on the server by `(public)/layout.tsx`. This component is
+   * "use client", so it cannot read the tenant row — and the flag must not
+   * become an async lookup, because there is no server to await here.
+   */
+  homeLoanEnabled: boolean;
 }
 
-export default function FooterV2({ settings, basePath, clientSlug }: FooterV2Props) {
+export default function FooterV2({ settings, basePath, homeLoanEnabled }: FooterV2Props) {
   // Non-null when rendered — layout.tsx already 404s before this ever mounts
   // without settings — but the prop type stays nullable to match the shared
   // getFirmSettings() return signature, so this narrows once, locally.
@@ -61,7 +65,7 @@ export default function FooterV2({ settings, basePath, clientSlug }: FooterV2Pro
 
   const resourceLinks: FooterLink[] = [
     { label: "Market Updates", href: p("/updates") },
-    ...(homeLoanEnabled(clientSlug) ? [{ label: "Home Loans", href: p("/home-loan") }] : []),
+    ...(homeLoanEnabled ? [{ label: "Home Loans", href: p("/home-loan") }] : []),
     { label: "Rental Yield", href: p("/rental-yield") },
     { label: "Area Converter", href: p("/area-converter") },
     { label: "Vastu", href: p("/vastu") },

@@ -163,7 +163,7 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
       <DeveloperRibbonV2 p={p} />
       <AdvisorsV2 phone={settings.phone} whatsapp={settings.whatsapp} />
       <MarketIntelligenceV2 localities={localities} basePath={basePath} />
-      {propertyMapSectionEnabled(tenant.slug) ? (
+      {propertyMapSectionEnabled(tenant) ? (
         <MapSelectedPropertyV2
           properties={allProperties.slice(0, 8)}
           imageMap={imageMap}
@@ -175,7 +175,7 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
       <CalculatorsV2
         contactHref={p("/contact")}
         advisorName={advisorName}
-        tools={toolHrefsFor(tenant.slug, basePath)}
+        tools={toolHrefsFor(tenant, basePath)}
       />
       <ConstructionVastuV2 p={p} />
       <RecentDealsV2 p={p} />
@@ -183,7 +183,7 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
       {/* Between the owner stories and the FAQ: it reads as the answer to what
           the stories just showed, and it is a pitch rather than a reference
           section, so it belongs ahead of the FAQ rather than after it. */}
-      {propertyManagementSectionEnabled(tenant.slug) ? (
+      {propertyManagementSectionEnabled(tenant) ? (
         <PropertyManagementV2
           firmName={settings.firmName}
           contactHref={p("/contact")}

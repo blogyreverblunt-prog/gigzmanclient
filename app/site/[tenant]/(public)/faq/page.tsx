@@ -7,7 +7,7 @@ import FaqAccordion from "@/components/site/FaqAccordion";
 import Illustration from "@/components/site/Illustration";
 import PremiumV2FaqPage from "@/components/realestate/premium-v2/PremiumV2FaqPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings } from "@/lib/content";
 import { buildFaqJsonLd, buildBreadcrumbJsonLd, jsonLdProps } from "@/lib/schema-org";
 
@@ -110,7 +110,7 @@ export default async function FaqPage(props: PageProps<"/site/[tenant]/faq">) {
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2FaqPage tenant={tenant} />;
   }
 

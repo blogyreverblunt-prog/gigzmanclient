@@ -5,11 +5,20 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 
 /**
- * Gates the public template-library pages (`/`, `/{vertical}`) and the
- * internal `/admin` deployment index — a single shared operator login, not a
- * per-client account, so it deliberately doesn't touch the `users`/`clients`
- * tables `lib/auth.ts` uses for per-tenant dashboards. Individual client
- * tenant sites (`/{vertical}/{template}/{slug}/...`) are never gated by this.
+ * Gates the internal platform dashboard: `/` (the client list) and
+ * `/clients/**` (the per-client edit screens). There is no `/admin` section and
+ * no public template-library page — `/` itself is the single gated dashboard,
+ * as AGENTS.md describes.
+ *
+ * A single shared operator login from environment variables, so it deliberately
+ * does not touch the `users`/`clients` tables `lib/auth.ts` uses for per-tenant
+ * dashboards; the two systems share nothing but the signing secret. Individual
+ * client sites (`/{vertical}/{template}/{slug}/...`) are never gated by this.
+ *
+ * `requirePlatformAdmin` redirects, which is right for a page and a trap in a
+ * Server Action: `redirect()` throws, and an action whose catch returns the
+ * error as a message will report "NEXT_REDIRECT" to the operator. Platform
+ * actions call `unstable_rethrow(error)` first in their catch for that reason.
  */
 
 const COOKIE_NAME = "gz_platform_session";

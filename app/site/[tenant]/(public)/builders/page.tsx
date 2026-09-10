@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import RegisterIndexV2, { type IndexEntry } from "@/components/realestate/premium-v2/RegisterIndexV2";
 import { basePathFor, getTenantBySlug, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getProperties } from "@/lib/content";
 import { withStats } from "@/lib/register";
 import { formatNumber } from "@/lib/format";
@@ -33,7 +33,7 @@ export async function generateMetadata(props: PageProps<"/site/[tenant]/builders
 export default async function BuildersPage(props: PageProps<"/site/[tenant]/builders">) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
 
   const basePath = basePathFor(tenant);
   const rows = withStats(await getProperties(tenant.id));

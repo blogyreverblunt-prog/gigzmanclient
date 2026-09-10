@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings } from "@/lib/content";
 import { getSessionUser } from "@/lib/auth";
 import DashboardChrome from "@/components/dashboard/DashboardChrome";
@@ -26,7 +26,7 @@ export default async function DashboardLayout({
 
   const themeProps = {
     "data-vertical": tenant.vertical,
-    "data-template": getTemplateKeyForSlug(tenant.slug),
+    "data-template": templateKeyFor(tenant),
   };
 
   // The login page renders bare, but still needs the tenant palette.

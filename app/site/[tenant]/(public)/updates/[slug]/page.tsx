@@ -8,7 +8,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import PremiumV2UpdateDetailPage from "@/components/realestate/premium-v2/PremiumV2UpdateDetailPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { paramsForEachTenant } from "@/lib/static-params";
 import { getFirmSettings, getUpdate, getPublishedUpdates } from "@/lib/content";
 import { formatDate } from "@/lib/format";
@@ -44,7 +44,7 @@ export default async function UpdateDetailPage(props: PageProps<"/site/[tenant]/
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) notFound();
 
-  if (getTemplateKeyForSlug(tenant.slug) === "premium-v2") {
+  if (templateKeyFor(tenant) === "premium-v2") {
     return <PremiumV2UpdateDetailPage tenant={tenant} slug={slug} />;
   }
 

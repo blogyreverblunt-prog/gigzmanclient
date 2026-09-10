@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { DoorOpen } from "lucide-react";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { DIRECTIONS, ROOMS, VASTU_CONTEXTS } from "@/lib/vastu";
 import { vastuSectorsEnabled } from "@/lib/vastu/enabled";
 import { buildBreadcrumbJsonLd, jsonLdProps } from "@/lib/schema-org";
@@ -32,7 +32,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function VastuHubPage(props: Props) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
 
   const basePath = basePathFor(tenant);
@@ -105,7 +105,7 @@ export default async function VastuHubPage(props: Props) {
             columns={3}
           />
 
-          {vastuSectorsEnabled(tenant.slug) ? (
+          {vastuSectorsEnabled(tenant) ? (
           <div className="mt-14 rounded-[var(--gp-radius-md)] border border-[color:var(--gp-border)] bg-white p-6 sm:p-8">
             <GpEyebrow className="text-[color:var(--gp-gold-600)]">By Gurugram sector</GpEyebrow>
             <h2 className="font-display mt-2 text-[16px] text-[color:var(--gp-ink)]">

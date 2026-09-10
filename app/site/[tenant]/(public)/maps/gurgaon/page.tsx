@@ -4,7 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { getFirmSettings, getLocalities } from "@/lib/content";
-import { getTemplateKeyForSlug } from "@/lib/templates";
+import { templateKeyFor } from "@/lib/templates";
 import { MAP_AREAS, AREA_KIND_LABELS, mapImageSrc, type AreaKind } from "@/lib/maps/areas";
 import blurPlaceholders from "@/lib/maps/blur-placeholders.json";
 import { buildBreadcrumbJsonLd, jsonLdProps } from "@/lib/schema-org";
@@ -37,7 +37,7 @@ const GROUP_ORDER: AreaKind[] = ["masterplan", "colony", "sector", "industrial"]
 export default async function MapsIndexPage(props: Props) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
-  if (!tenant || getTemplateKeyForSlug(tenant.slug) !== "premium-v2") notFound();
+  if (!tenant || templateKeyFor(tenant) !== "premium-v2") notFound();
   const settings = await getFirmSettings(tenant.id);
 
   const localities = await getLocalities(tenant.id);
