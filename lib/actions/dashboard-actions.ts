@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { randomBytes } from "node:crypto";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
@@ -20,6 +20,8 @@ import {
   localities,
 } from "@/lib/db/schema";
 import { requireUser, requireAdmin } from "@/lib/auth";
+import { tenantDataTag } from "@/lib/cache-tags";
+import { SITEMAP_FAMILIES } from "@/lib/sitemap";
 import { slugify } from "@/lib/format";
 
 export interface ActionResult {
@@ -43,6 +45,52 @@ async function assertOwnership<T extends { clientId: string }>(
 function fail(error: unknown): ActionResult {
   const message = error instanceof Error ? error.message : "Something went wrong";
   return { ok: false, message };
+}
+
+/**
+ * Expire this tenant's cached public pages.
+ *
+ * Until CD-03c every action here ended in `revalidatePath("/site/properties")`
+ * or `revalidatePath("/site")`, and **none of them did anything**. Next turns
+ * the argument into the single implicit tag `_N_T_<path>`, while a rendered
+ * entry carries tags derived from its ROUTE PATTERN — `_N_T_/site/[tenant]/
+ * (public)/properties/page` — plus its resolved pathname,
+ * `_N_T_/site/high-properties/properties`. `_N_T_/site/properties` is neither,
+ * so it matched nothing. No warning was emitted either: the missing-`type`
+ * warning only fires when the path contains a dynamic segment, and these did
+ * not. The dashboard said "Saved." and the public page kept serving the old
+ * copy until the 300-second window expired on its own.
+ *
+ * `tenantDataTag` works because it is attached to real cached entries:
+ * `cachedForClient` in lib/content.ts tags every cross-request entry with it,
+ * and `unstable_cache` pushes its tags onto the enclosing render, so every page
+ * under app/site/[tenant]/(public)/ inherits it through the layout's
+ * `getFirmSettings` call. Expiring it re-renders this tenant's pages — which
+ * also picks up the per-request `cache()` reads (properties, services, updates)
+ * that have no cross-request entry of their own to expire.
+ *
+ * Scoped to one tenant on purpose. A coarse tag would expire all six on any
+ * edit, and the cross-region round trip that caching exists to avoid
+ * (functions in bom1, pooler in ap-southeast-2) is not optional polish.
+ *
+ * `updateTag`, not `revalidateTag`: the single-argument form is deprecated in
+ * Next 16.3.3, and `revalidateTag(tag, "max")` serves the stale copy for up to
+ * a year while revalidating behind the request — wrong for someone who just
+ * pressed Save and is about to check the site.
+ */
+function invalidateTenantContent(clientId: string) {
+  updateTag(tenantDataTag(clientId));
+}
+
+/**
+ * The sitemaps are route handlers that read `clients` and the content tables
+ * directly, so they carry none of the tenant tags. They are addressed by
+ * literal pathname, which is the one `revalidatePath` form that does match: a
+ * rendered entry carries its resolved pathname as exactly that implicit tag.
+ */
+function invalidateSitemaps() {
+  revalidatePath("/sitemap.xml");
+  for (const family of SITEMAP_FAMILIES) revalidatePath(`/sitemaps/${family.id}.xml`);
 }
 
 // ─────────────────────────────────────────────────────────────── queries
@@ -82,7 +130,8 @@ export async function updateQueryStatus(formData: FormData): Promise<ActionResul
       changedBy: user.name ?? user.email,
     });
 
-    revalidatePath("/site/dashboard/queries");
+    // No invalidation: the dashboard tree is dynamically rendered (every page
+    // reads cookies through getSessionUser), and a lead changes no public page.
     return { ok: true, message: "Status updated." };
   } catch (error) {
     return fail(error);
@@ -111,7 +160,8 @@ export async function updateQueryDetails(formData: FormData): Promise<ActionResu
       })
       .where(eq(queries.id, id));
 
-    revalidatePath("/site/dashboard/queries");
+    // No invalidation: the dashboard tree is dynamically rendered (every page
+    // reads cookies through getSessionUser), and a lead changes no public page.
     return { ok: true, message: "Query updated." };
   } catch (error) {
     return fail(error);
@@ -136,7 +186,8 @@ export async function addQueryNote(formData: FormData): Promise<ActionResult> {
 
     await db.update(queries).set({ lastActivityAt: new Date() }).where(eq(queries.id, id));
 
-    revalidatePath("/site/dashboard/queries");
+    // No invalidation: the dashboard tree is dynamically rendered (every page
+    // reads cookies through getSessionUser), and a lead changes no public page.
     return { ok: true, message: "Note added." };
   } catch (error) {
     return fail(error);
@@ -157,7 +208,8 @@ export async function archiveQuery(formData: FormData): Promise<ActionResult> {
       .set({ isArchived: !existing.isArchived, lastActivityAt: new Date() })
       .where(eq(queries.id, id));
 
-    revalidatePath("/site/dashboard/queries");
+    // No invalidation: the dashboard tree is dynamically rendered (every page
+    // reads cookies through getSessionUser), and a lead changes no public page.
     return { ok: true, message: existing.isArchived ? "Query restored." : "Query archived." };
   } catch (error) {
     return fail(error);
@@ -234,8 +286,8 @@ export async function saveUpdate(formData: FormData): Promise<ActionResult> {
       });
     }
 
-    revalidatePath("/site/dashboard/updates");
-    revalidatePath("/site/updates");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Update saved." };
   } catch (error) {
     return fail(error);
@@ -259,8 +311,8 @@ export async function deleteUpdate(formData: FormData): Promise<ActionResult> {
       .set({ status: "archived", updatedAt: new Date() })
       .where(eq(professionalUpdates.id, id));
 
-    revalidatePath("/site/dashboard/updates");
-    revalidatePath("/site/updates");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Update archived." };
   } catch (error) {
     return fail(error);
@@ -311,9 +363,8 @@ export async function saveComplianceEvent(formData: FormData): Promise<ActionRes
       await db.insert(complianceEvents).values({ ...values, clientId: user.clientId });
     }
 
-    revalidatePath("/site/dashboard/compliance");
-    revalidatePath("/site/compliance-calendar");
-    revalidatePath("/site");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Compliance date saved." };
   } catch (error) {
     return fail(error);
@@ -334,8 +385,8 @@ export async function deleteComplianceEvent(formData: FormData): Promise<ActionR
 
     await db.delete(complianceEvents).where(eq(complianceEvents.id, id));
 
-    revalidatePath("/site/dashboard/compliance");
-    revalidatePath("/site/compliance-calendar");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Compliance date removed." };
   } catch (error) {
     return fail(error);
@@ -375,8 +426,7 @@ export async function updateCalculator(formData: FormData): Promise<ActionResult
       })
       .where(eq(calculators.id, id));
 
-    revalidatePath("/site/dashboard/calculators");
-    revalidatePath("/site/calculators");
+    invalidateTenantContent(user.clientId);
     return { ok: true, message: "Calculator updated." };
   } catch (error) {
     return fail(error);
@@ -426,8 +476,7 @@ export async function updateFirmSettings(formData: FormData): Promise<ActionResu
       })
       .where(eq(firmSettings.clientId, user.clientId));
 
-    revalidatePath("/site/dashboard/settings");
-    revalidatePath("/site");
+    invalidateTenantContent(user.clientId);
     return { ok: true, message: "Settings saved." };
   } catch (error) {
     return fail(error);
@@ -447,8 +496,8 @@ export async function toggleService(formData: FormData): Promise<ActionResult> {
       .set({ isActive: !existing.isActive, updatedAt: new Date() })
       .where(and(eq(services.id, id), eq(services.clientId, user.clientId)));
 
-    revalidatePath("/site/dashboard/settings");
-    revalidatePath("/site/services");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: existing.isActive ? "Service hidden." : "Service published." };
   } catch (error) {
     return fail(error);
@@ -518,8 +567,8 @@ export async function saveProperty(formData: FormData): Promise<ActionResult> {
       });
     }
 
-    revalidatePath("/site/dashboard/properties");
-    revalidatePath("/site/properties");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Property saved." };
   } catch (error) {
     return fail(error);
@@ -539,8 +588,8 @@ export async function toggleProperty(formData: FormData): Promise<ActionResult> 
       .set({ isActive: !existing.isActive, updatedAt: new Date() })
       .where(eq(properties.id, id));
 
-    revalidatePath("/site/dashboard/properties");
-    revalidatePath("/site/properties");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: existing.isActive ? "Property hidden." : "Property published." };
   } catch (error) {
     return fail(error);
@@ -611,8 +660,8 @@ export async function uploadPropertyImage(formData: FormData): Promise<ActionRes
       sortOrder: existingImages.length,
     });
 
-    revalidatePath("/site/dashboard/properties");
-    revalidatePath("/site/properties");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Image uploaded." };
   } catch (error) {
     return fail(error);
@@ -656,8 +705,8 @@ export async function deletePropertyImage(formData: FormData): Promise<ActionRes
       }
     }
 
-    revalidatePath("/site/dashboard/properties");
-    revalidatePath("/site/properties");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Image removed." };
   } catch (error) {
     return fail(error);
@@ -685,8 +734,8 @@ export async function setPrimaryPropertyImage(formData: FormData): Promise<Actio
       .where(eq(propertyImages.propertyId, image.propertyId));
     await db.update(propertyImages).set({ isPrimary: true }).where(eq(propertyImages.id, id));
 
-    revalidatePath("/site/dashboard/properties");
-    revalidatePath("/site/properties");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Cover photo updated." };
   } catch (error) {
     return fail(error);
@@ -743,8 +792,8 @@ export async function saveLocality(formData: FormData): Promise<ActionResult> {
       await db.insert(localities).values({ ...values, clientId: user.clientId, slug: slugify(name) });
     }
 
-    revalidatePath("/site/dashboard/localities");
-    revalidatePath("/site/localities");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: "Locality saved." };
   } catch (error) {
     return fail(error);
@@ -764,8 +813,8 @@ export async function toggleLocality(formData: FormData): Promise<ActionResult> 
       .set({ isPublished: !existing.isPublished, updatedAt: new Date() })
       .where(eq(localities.id, id));
 
-    revalidatePath("/site/dashboard/localities");
-    revalidatePath("/site/localities");
+    invalidateTenantContent(user.clientId);
+    invalidateSitemaps();
     return { ok: true, message: existing.isPublished ? "Locality hidden." : "Locality published." };
   } catch (error) {
     return fail(error);

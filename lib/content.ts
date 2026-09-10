@@ -29,15 +29,18 @@ import { tenantDataTag } from "@/lib/cache-tags";
  *    round trip. A page making a dozen of those is why pages took seconds.
  *
  * `REVALIDATE_SECONDS` is how long an UNOBSERVED change may go unnoticed. It is
- * no longer the latency of a dashboard edit: the clientId-scoped reads below
- * carry `tenantDataTag(clientId)` and the platform actions in
- * lib/actions/platform-actions.ts expire it on save, so an edit is live on the
- * next request. Note that the tenant dashboard's own actions do NOT yet do
- * this — see lib/actions/dashboard-actions.ts, whose ~30 `revalidatePath`
- * calls name paths (`"/site"`, `"/site/properties"`, …) that are not real
- * rendered routes and therefore match no tag at all. So for now the two write
- * surfaces behave differently: a platform edit propagates in seconds, a tenant
- * edit does not propagate at all and waits out this window. CD-03c repairs it.
+ * not the latency of a dashboard edit: the clientId-scoped reads below carry
+ * `tenantDataTag(clientId)`, and both write surfaces expire it on save — the
+ * platform actions in lib/actions/platform-actions.ts and, since CD-03c, the
+ * tenant dashboard's own actions in lib/actions/dashboard-actions.ts. An edit
+ * from either is live on the next request.
+ *
+ * Until CD-03c the second half of that was false: those actions ended in
+ * `revalidatePath("/site")` and `revalidatePath("/site/properties")`, paths
+ * that are not real rendered routes and so matched no tag at all, while the
+ * dashboard reported "Saved.". If a future edit here reintroduces a
+ * path-based call, check it against a resolved pathname or a route pattern
+ * plus a `type` — Next does not warn when a path matches nothing.
  */
 const REVALIDATE_SECONDS = 300;
 
