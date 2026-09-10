@@ -27,6 +27,7 @@ import {
   TAX_YEAR,
 } from "../lib/calculators/registry";
 import { TEMPLATE_REGISTRY } from "../lib/templates";
+import { getVerticalConfig } from "../lib/verticals";
 
 /**
  * Loads a client folder into the database.
@@ -295,7 +296,20 @@ async function main() {
   // -------------------------------------------------------------- services
   const serviceDoc = readYaml<any>("content/services.yaml");
   if (serviceDoc?.services) {
+    // `services.category` is a plain varchar validated at the application
+    // layer, deliberately not a pgEnum, because the valid set differs per
+    // vertical (see the schema comment). "Application layer" has to include
+    // this script: it is the only writer of the column, so an out-of-vertical
+    // category loaded here renders under a heading the template has no label
+    // for and is filtered out of its own index page.
+    const validCategories = new Set(getVerticalConfig(vertical).serviceCategories.map((c) => c.value));
     for (const [i, s] of serviceDoc.services.entries()) {
+      if (!validCategories.has(s.category)) {
+        throw new Error(
+          `content/services.yaml: "${s.slug}" has category "${s.category}", which is not valid ` +
+            `for the ${vertical} vertical. Valid categories: ${[...validCategories].join(", ")}.`,
+        );
+      }
       const values = {
         clientId,
         slug: s.slug,

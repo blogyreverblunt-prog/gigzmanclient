@@ -99,6 +99,8 @@ export const realestate: VerticalConfig = {
     { label: "Localities", path: "/dashboard/localities", icon: "MapPin", adminOnly: false },
     { label: "Insights", path: "/dashboard/updates", icon: "FileText", adminOnly: false },
     { label: "Calculators", path: "/dashboard/calculators", icon: "Calculator", adminOnly: true },
+    { label: "Team", path: "/dashboard/team", icon: "Users", adminOnly: true },
+    { label: "Offices", path: "/dashboard/offices", icon: "MapPinned", adminOnly: true },
     { label: "Settings", path: "/dashboard/settings", icon: "Settings", adminOnly: true },
   ],
 

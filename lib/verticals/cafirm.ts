@@ -62,6 +62,8 @@ export const cafirm: VerticalConfig = {
     { label: "Updates", path: "/dashboard/updates", icon: "FileText", adminOnly: false },
     { label: "Compliance", path: "/dashboard/compliance", icon: "CalendarClock", adminOnly: false },
     { label: "Calculators", path: "/dashboard/calculators", icon: "Calculator", adminOnly: true },
+    { label: "Team", path: "/dashboard/team", icon: "Users", adminOnly: true },
+    { label: "Offices", path: "/dashboard/offices", icon: "MapPinned", adminOnly: true },
     { label: "Settings", path: "/dashboard/settings", icon: "Settings", adminOnly: true },
   ],
 

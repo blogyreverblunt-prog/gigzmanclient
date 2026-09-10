@@ -16,6 +16,8 @@ import {
   X,
   Building2,
   MapPin,
+  MapPinned,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { logout } from "@/lib/actions/auth-actions";
@@ -32,6 +34,8 @@ const ICONS: Record<string, LucideIcon> = {
   Settings,
   Building2,
   MapPin,
+  MapPinned,
+  Users,
 };
 
 interface DashboardChromeProps {

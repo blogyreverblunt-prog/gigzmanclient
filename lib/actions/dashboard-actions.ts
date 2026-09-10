@@ -16,12 +16,16 @@ import {
   properties,
   propertyImages,
   localities,
+  teamMembers,
+  officeLocations,
+  clients,
 } from "@/lib/db/schema";
 import { requireUser, requireAdmin } from "@/lib/auth";
 import { putObject, deleteObject } from "@/lib/storage";
 import { tenantDataTag } from "@/lib/cache-tags";
 import { SITEMAP_FAMILIES } from "@/lib/sitemap";
 import { slugify } from "@/lib/format";
+import { getVerticalConfig, type VerticalId } from "@/lib/verticals";
 
 export interface ActionResult {
   ok: boolean;
@@ -323,6 +327,10 @@ export async function deleteUpdate(formData: FormData): Promise<ActionResult> {
 export async function saveComplianceEvent(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["cafirm"]);
     const id = String(formData.get("id") ?? "").trim();
 
     const title = String(formData.get("title") ?? "").trim();
@@ -373,6 +381,10 @@ export async function saveComplianceEvent(formData: FormData): Promise<ActionRes
 export async function deleteComplianceEvent(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["cafirm"]);
     const id = String(formData.get("id"));
 
     const [existing] = await db
@@ -508,6 +520,10 @@ export async function toggleService(formData: FormData): Promise<ActionResult> {
 export async function saveProperty(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const id = String(formData.get("id") ?? "").trim();
 
     const title = String(formData.get("title") ?? "").trim();
@@ -577,6 +593,10 @@ export async function saveProperty(formData: FormData): Promise<ActionResult> {
 export async function toggleProperty(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const id = String(formData.get("id"));
 
     const [existing] = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
@@ -616,6 +636,10 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export async function uploadPropertyImage(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const propertyId = String(formData.get("propertyId") ?? "").trim();
     const alt = String(formData.get("alt") ?? "").trim() || null;
     const file = formData.get("file");
@@ -675,6 +699,10 @@ export async function uploadPropertyImage(formData: FormData): Promise<ActionRes
 export async function deletePropertyImage(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const id = String(formData.get("id"));
 
     const [image] = await db.select().from(propertyImages).where(eq(propertyImages.id, id)).limit(1);
@@ -720,6 +748,10 @@ export async function deletePropertyImage(formData: FormData): Promise<ActionRes
 export async function setPrimaryPropertyImage(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const id = String(formData.get("id"));
 
     const [image] = await db.select().from(propertyImages).where(eq(propertyImages.id, id)).limit(1);
@@ -751,6 +783,10 @@ export async function setPrimaryPropertyImage(formData: FormData): Promise<Actio
 export async function saveLocality(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const id = String(formData.get("id") ?? "").trim();
 
     const name = String(formData.get("name") ?? "").trim();
@@ -807,6 +843,10 @@ export async function saveLocality(formData: FormData): Promise<ActionResult> {
 export async function toggleLocality(formData: FormData): Promise<ActionResult> {
   try {
     const user = await requireUser();
+    // Vertical scoping (CD-08): the sidebar does not render this section for
+    // another industry, but a Server Action is a POST endpoint that never sees
+    // the sidebar.
+    await assertVertical(user.clientId, ["realestate"]);
     const id = String(formData.get("id"));
 
     const [existing] = await db.select().from(localities).where(eq(localities.id, id)).limit(1);
@@ -820,6 +860,187 @@ export async function toggleLocality(formData: FormData): Promise<ActionResult> 
     invalidateTenantContent(user.clientId);
     invalidateSitemaps();
     return { ok: true, message: existing.isPublished ? "Locality hidden." : "Locality published." };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+// ────────────────────────────────────────────────── vertical scoping (CD-08)
+
+/**
+ * Refuse an action that does not belong to this client's industry.
+ *
+ * Hiding a screen from the sidebar is not a control: `lib/verticals/*` decides
+ * what `DashboardChrome` renders, but every action here is a POST endpoint that
+ * does not consult it. Without this, a CA firm's dashboard user could create
+ * property listings — rows that no page of their site renders, that appear in
+ * no sitemap, and that nobody would find until someone wondered why the table
+ * had data in it.
+ *
+ * Reads the vertical from the row, never from the request.
+ */
+async function assertVertical(clientId: string, allowed: VerticalId[]): Promise<void> {
+  const [row] = await db
+    .select({ vertical: clients.vertical })
+    .from(clients)
+    .where(eq(clients.id, clientId))
+    .limit(1);
+  if (!row || !allowed.includes(row.vertical as VerticalId)) {
+    throw new Error(
+      `This section is not part of a ${getVerticalConfig(row?.vertical).label.toLowerCase()} site.`,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────── team members
+
+export async function saveTeamMember(formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireAdmin();
+    const id = String(formData.get("id") ?? "").trim();
+
+    const name = String(formData.get("name") ?? "").trim();
+    if (!name) return { ok: false, message: "A name is required." };
+
+    // Every other field may legitimately be empty. AGENTS.md: a membership
+    // number and a set of qualifications are regulated claims about a real
+    // person — empty renders nothing, invented ships a lie.
+    const values = {
+      name,
+      designation: String(formData.get("designation") ?? "").trim() || null,
+      qualifications: String(formData.get("qualifications") ?? "").trim() || null,
+      membershipNumber: String(formData.get("membershipNumber") ?? "").trim() || null,
+      bio: String(formData.get("bio") ?? "").trim() || null,
+      sortOrder: Number(formData.get("sortOrder") ?? 0) || 0,
+      isActive: formData.get("isActive") !== "off",
+    };
+
+    if (id) {
+      const [existing] = await db.select().from(teamMembers).where(eq(teamMembers.id, id)).limit(1);
+      await assertOwnership(existing, user.clientId);
+      await db.update(teamMembers).set(values).where(eq(teamMembers.id, id));
+    } else {
+      await db.insert(teamMembers).values({ ...values, clientId: user.clientId });
+    }
+
+    invalidateTenantContent(user.clientId);
+    return { ok: true, message: id ? "Team member updated." : "Team member added." };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function uploadTeamPhoto(formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireAdmin();
+    const id = String(formData.get("id") ?? "").trim();
+    const file = formData.get("photo");
+
+    const [existing] = await db.select().from(teamMembers).where(eq(teamMembers.id, id)).limit(1);
+    await assertOwnership(existing, user.clientId);
+
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Choose a photo to upload." };
+    }
+    if (file.size > MAX_IMAGE_BYTES) return { ok: false, message: "Photo must be 5MB or smaller." };
+    const ext = ALLOWED_IMAGE_TYPES[file.type];
+    if (!ext) return { ok: false, message: "Only JPEG, PNG or WebP images are accepted." };
+
+    // Same storage seam and the same never-trust-the-filename rule as property
+    // images; see lib/storage.ts for why the local backend is not production.
+    const url = await putObject(
+      `${user.clientId}/team/${randomBytes(16).toString("hex")}.${ext}`,
+      Buffer.from(await file.arrayBuffer()),
+      file.type,
+    );
+
+    if (existing.photoUrl) await deleteObject(existing.photoUrl);
+    await db.update(teamMembers).set({ photoUrl: url }).where(eq(teamMembers.id, id));
+
+    invalidateTenantContent(user.clientId);
+    return { ok: true, message: "Photo updated." };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function deleteTeamMember(formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireAdmin();
+    const id = String(formData.get("id") ?? "");
+    const [existing] = await db.select().from(teamMembers).where(eq(teamMembers.id, id)).limit(1);
+    await assertOwnership(existing, user.clientId);
+
+    if (existing.photoUrl) await deleteObject(existing.photoUrl);
+    await db.delete(teamMembers).where(eq(teamMembers.id, id));
+
+    invalidateTenantContent(user.clientId);
+    return { ok: true, message: "Team member removed." };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+// ────────────────────────────────────────────────────────── office locations
+
+export async function saveOfficeLocation(formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireAdmin();
+    const id = String(formData.get("id") ?? "").trim();
+
+    const label = String(formData.get("label") ?? "").trim();
+    if (!label) return { ok: false, message: "A label is required (for example \"Head office\")." };
+
+    const values = {
+      label,
+      addressLine: String(formData.get("addressLine") ?? "").trim() || null,
+      locality: String(formData.get("locality") ?? "").trim() || null,
+      region: String(formData.get("region") ?? "").trim() || null,
+      postalCode: String(formData.get("postalCode") ?? "").trim() || null,
+      phone: String(formData.get("phone") ?? "").trim() || null,
+      isPrimary: formData.get("isPrimary") === "on",
+      sortOrder: Number(formData.get("sortOrder") ?? 0) || 0,
+    };
+
+    // One transaction, because "exactly one primary" is the invariant and doing
+    // the demotion in a second statement leaves a window with two — or, if the
+    // insert fails, with none.
+    await db.transaction(async (tx) => {
+      if (values.isPrimary) {
+        await tx
+          .update(officeLocations)
+          .set({ isPrimary: false })
+          .where(eq(officeLocations.clientId, user.clientId));
+      }
+      if (id) {
+        await tx.update(officeLocations).set(values).where(eq(officeLocations.id, id));
+      } else {
+        await tx.insert(officeLocations).values({ ...values, clientId: user.clientId });
+      }
+    });
+
+    invalidateTenantContent(user.clientId);
+    return { ok: true, message: id ? "Office updated." : "Office added." };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function deleteOfficeLocation(formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireAdmin();
+    const id = String(formData.get("id") ?? "");
+    const [existing] = await db
+      .select()
+      .from(officeLocations)
+      .where(eq(officeLocations.id, id))
+      .limit(1);
+    await assertOwnership(existing, user.clientId);
+
+    await db.delete(officeLocations).where(eq(officeLocations.id, id));
+
+    invalidateTenantContent(user.clientId);
+    return { ok: true, message: "Office removed." };
   } catch (error) {
     return fail(error);
   }
