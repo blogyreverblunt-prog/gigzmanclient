@@ -182,9 +182,12 @@ build. A `"use client"` consumer receives the resolved boolean as a prop
 `{}` is well-defined, not unknown: it means every default above. Note the
 defaults are not uniform — `propertyMap` is opt-**out**.
 
-**Hero copy (eyebrow, headline, blurb, stats) is the one per-client switch
-still in code**, in `lib/premium-v2/positioning.ts`. It is not a boolean, so it
-did not move with the rest.
+**Hero copy** (eyebrow, headline, blurb, four stat tiles) moved to
+`clients.hero_copy` in CD-07. `DEFAULT` in `lib/premium-v2/positioning.ts`
+stays as the fallback when the column is null, so a newly created client has a
+working hero with no data entry. Stat *values* are only stored for
+`kind: "claim"` — the others are counted from the client's own inventory at
+render time so the figure cannot drift from what the site shows.
 
 ## Layout of the repo
 
