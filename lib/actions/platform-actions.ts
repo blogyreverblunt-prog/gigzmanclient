@@ -31,6 +31,13 @@ import {
 } from "@/lib/brand-images";
 import { SITEMAP_FAMILIES } from "@/lib/sitemap";
 import { featureEnabled, type ClientFeatures } from "@/lib/features";
+import {
+  HERO_STAT_COUNT,
+  STAT_ICONS,
+  type HeroStatValue,
+  type StatIcon,
+  type StatKind,
+} from "@/lib/premium-v2/hero-copy-types";
 import { vastuSectorTenants } from "@/lib/platform/clients";
 import {
   FEATURES_REALESTATE_ONLY_REFUSAL,
@@ -762,6 +769,98 @@ export async function updateClientSeo(formData: FormData): Promise<ActionResult>
     invalidateTenant(row);
 
     return { ok: true, message: "Search appearance saved." };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────── hero copy
+
+const STAT_KINDS: StatKind[] = ["listings", "corridors", "medianPlot", "medianPrice", "claim"];
+
+/**
+ * The homepage hero, per client.
+ *
+ * Three things are enforced here rather than left to the form, because each of
+ * them is a way to produce a hero that renders wrong or says something untrue:
+ *
+ *  - **Exactly four stats.** The tile row is a four-column layout; three leaves
+ *    a hole and five wraps.
+ *  - **`value` only on a `claim`.** Every other kind is COUNTED from the
+ *    client's own inventory at render time, deliberately, so the figure on the
+ *    page cannot drift from what the site is showing. Storing a number against
+ *    a counted kind would create a second source of truth that silently loses.
+ *  - **`icon` from the fixed set.** It selects a component; an unrecognised name
+ *    renders nothing and leaves a gap in the row.
+ *
+ * Saving copy identical to the template default clears the column rather than
+ * storing a copy of it, so a client that has never been customised keeps
+ * tracking `DEFAULT` if the template's own wording is ever revised.
+ */
+export async function updateClientHeroCopy(formData: FormData): Promise<ActionResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const row = await loadClientRow(String(formData.get("clientId") ?? ""));
+    if (!row) return { ok: false, message: "Client not found." };
+    if (row.vertical !== "realestate") {
+      return { ok: false, message: "The hero belongs to the real-estate template." };
+    }
+
+    if (String(formData.get("reset") ?? "") === "on") {
+      await db.update(clients).set({ heroCopy: null }).where(eq(clients.id, row.id));
+      invalidateTenant(row);
+      return { ok: true, message: "Hero reset to the template default." };
+    }
+
+    const stats: HeroStatValue[] = [];
+    for (let i = 0; i < HERO_STAT_COUNT; i += 1) {
+      const kind = String(formData.get(`stats.${i}.kind`) ?? "") as StatKind;
+      const icon = String(formData.get(`stats.${i}.icon`) ?? "") as StatIcon;
+      const label = String(formData.get(`stats.${i}.label`) ?? "").trim();
+      const value = String(formData.get(`stats.${i}.value`) ?? "").trim();
+
+      if (!STAT_KINDS.includes(kind)) {
+        return { ok: false, message: `Tile ${i + 1}: choose what it shows.` };
+      }
+      if (!STAT_ICONS.includes(icon)) {
+        return { ok: false, message: `Tile ${i + 1}: choose an icon.` };
+      }
+      if (!label) return { ok: false, message: `Tile ${i + 1}: a label is required.` };
+
+      if (kind === "claim") {
+        if (!value) {
+          return { ok: false, message: `Tile ${i + 1}: a stated figure needs a value.` };
+        }
+        stats.push({ kind, icon, label, value });
+      } else {
+        // Dropped rather than rejected: a leftover value from switching a tile
+        // away from "claim" is the operator changing their mind, not an error
+        // worth stopping the save for. What matters is that it is not stored.
+        stats.push({ kind, icon, label });
+      }
+    }
+
+    const headline: [string, string] = [
+      String(formData.get("headline0") ?? "").trim(),
+      String(formData.get("headline1") ?? "").trim(),
+    ];
+    const blurb = String(formData.get("blurb") ?? "").trim();
+    const eyebrow = String(formData.get("eyebrow") ?? "").trim();
+    const searchPlaceholder = String(formData.get("searchPlaceholder") ?? "").trim();
+
+    if (!headline[0] || !blurb) {
+      return { ok: false, message: "The first headline line and the paragraph are required." };
+    }
+
+    await db
+      .update(clients)
+      .set({ heroCopy: { eyebrow, headline, blurb, searchPlaceholder, stats } })
+      .where(eq(clients.id, row.id));
+
+    invalidateTenant(row);
+    return { ok: true, message: "Hero copy saved." };
   } catch (error) {
     unstable_rethrow(error);
     return fail(error);

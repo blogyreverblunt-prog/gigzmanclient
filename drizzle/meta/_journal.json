@@ -64,6 +64,13 @@
       "when": 1789034037793,
       "tag": "0008_yellow_tana_nile",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789034603609,
+      "tag": "0009_loving_sersi",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,8 @@ import FeatureToggles from "@/components/platform/FeatureToggles";
 import BrandingPanel from "@/components/platform/BrandingPanel";
 import SearchAppearanceForm from "@/components/platform/SearchAppearanceForm";
 import ReadinessPanel from "@/components/platform/ReadinessPanel";
+import HeroCopyForm from "@/components/platform/HeroCopyForm";
+import { defaultHeroCopy } from "@/lib/premium-v2/positioning";
 import { clientReadiness } from "@/lib/platform/readiness";
 import { generatedHomeMeta } from "@/lib/seo/generated";
 import { getLocalities, getServices } from "@/lib/content";
@@ -226,6 +228,20 @@ export default async function ClientEditPage({
                 ga4MeasurementId: settings.ga4MeasurementId ?? "",
                 searchConsoleVerification: settings.searchConsoleVerification ?? "",
               }}
+            />
+          ) : null}
+
+          {/*
+            Real-estate only: the hero belongs to the premium-v2 template and
+            a cafirm client has no such section. The action refuses the same
+            way; this is the courtesy that stops an operator reaching it.
+          */}
+          {client.vertical === "realestate" && settings ? (
+            <HeroCopyForm
+              clientId={client.id}
+              firmName={settings.firmName}
+              initial={client.heroCopy ?? defaultHeroCopy()}
+              isCustomised={Boolean(client.heroCopy)}
             />
           ) : null}
 

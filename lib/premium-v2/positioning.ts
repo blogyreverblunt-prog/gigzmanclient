@@ -12,29 +12,22 @@
  * client's own inventory at render time, so they cannot drift away from what
  * the site is actually showing.
  */
-export type StatKind = "listings" | "corridors" | "medianPlot" | "medianPrice" | "claim";
+import {
+  HERO_STAT_COUNT,
+  STAT_ICONS,
+  type HeroCopyValue,
+  type HeroStatValue,
+  type StatIcon,
+  type StatKind,
+} from "@/lib/premium-v2/hero-copy-types";
 
-export interface HeroStat {
-  kind: StatKind;
-  label: string;
-  /** Only for `claim` — a figure the client asserts, not one we can count. */
-  value?: string;
-  icon: "Award" | "Users" | "Signpost" | "ShieldCheck" | "Trees" | "Ruler" | "IndianRupee";
-}
-
-/**
- * `blurb` is a template with a `{firm}` placeholder rather than a function:
- * the resolved copy is handed to HeroV2, which is a Client Component, and a
- * function cannot cross that boundary ("Functions cannot be passed directly
- * to Client Components").
- */
-export interface HeroCopy {
-  eyebrow: string;
-  headline: [string, string];
-  blurb: string;
-  searchPlaceholder: string;
-  stats: HeroStat[];
-}
+// Re-exported so existing importers of this module keep working; the shapes
+// themselves live in a no-import module because lib/db/schema.ts types the
+// `clients.hero_copy` column with them.
+export { HERO_STAT_COUNT, STAT_ICONS };
+export type { StatKind, StatIcon };
+export type HeroStat = HeroStatValue;
+export type HeroCopy = HeroCopyValue;
 
 const DEFAULT: HeroCopy = {
   eyebrow: "Gurugram Real Estate, Reimagined",
@@ -50,25 +43,46 @@ const DEFAULT: HeroCopy = {
   ],
 };
 
-const FARMHOUSE: HeroCopy = {
-  eyebrow: "Sohna & the Gurugram farm belt",
-  headline: ["Land of your own,", "an hour from the city."],
-  blurb:
-    "{firm} works only on farm houses, weekend estates and agricultural land along the Sohna–Gurugram corridor — with plot sizes, ownership and asking prices set out plainly on every listing.",
-  searchPlaceholder: "Your mobile number",
-  stats: [
-    { kind: "listings", label: "Farm houses listed", icon: "Trees" },
-    { kind: "corridors", label: "Corridors covered", icon: "Signpost" },
-    { kind: "medianPlot", label: "Median plot size", icon: "Ruler" },
-    { kind: "medianPrice", label: "Median asking price", icon: "IndianRupee" },
-  ],
-};
-
-const BY_CLIENT: Record<string, HeroCopy> = {
-  "evergreen-real-estate": FARMHOUSE,
-};
-
-export function heroCopyFor(clientSlug: string | undefined | null, firmName: string): HeroCopy {
-  const copy = (clientSlug && BY_CLIENT[clientSlug]) || DEFAULT;
+/**
+ * The evergreen-real-estate copy that used to live in `BY_CLIENT` is now on
+ * that client's row (migration 0009). `DEFAULT` above stays in code as the
+ * fallback: a client created from the wizard has `hero_copy` null and gets a
+ * working hero with no data entry at all.
+ */
+export function heroCopyFor(
+  tenant: { heroCopy?: HeroCopy | null } | null | undefined,
+  firmName: string,
+): HeroCopy {
+  const stored = tenant?.heroCopy;
+  // Shape-checked rather than trusted: jsonb has no type checking, and a hand
+  // edited row with three stats would break the four-tile layout. Anything
+  // that does not look right falls back whole rather than being patched
+  // field by field, which would produce a hero half from each source.
+  const copy = isHeroCopy(stored) ? stored : DEFAULT;
   return { ...copy, blurb: copy.blurb.replace("{firm}", firmName) };
+}
+
+function isHeroCopy(value: unknown): value is HeroCopy {
+  if (!value || typeof value !== "object") return false;
+  const copy = value as Partial<HeroCopy>;
+  return (
+    typeof copy.eyebrow === "string" &&
+    Array.isArray(copy.headline) &&
+    copy.headline.length === 2 &&
+    typeof copy.blurb === "string" &&
+    typeof copy.searchPlaceholder === "string" &&
+    Array.isArray(copy.stats) &&
+    copy.stats.length === HERO_STAT_COUNT &&
+    copy.stats.every(
+      (stat) =>
+        stat &&
+        typeof stat.label === "string" &&
+        STAT_ICONS.includes(stat.icon as never),
+    )
+  );
+}
+
+/** The template default, for seeding an editor that has nothing stored yet. */
+export function defaultHeroCopy(): HeroCopy {
+  return structuredClone(DEFAULT);
 }

@@ -13,6 +13,7 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 import type { ClientFeatures } from "@/lib/features";
+import type { HeroCopyValue } from "@/lib/premium-v2/hero-copy-types";
 
 /**
  * Every content table is scoped by `clientId` so a single deployment can serve
@@ -126,6 +127,22 @@ export const clients = pgTable("clients", {
    * hand-written `"yes"`, `1` or `null` must not reach a boolean gate.
    */
   features: jsonb("features").$type<ClientFeatures>().notNull().default({}),
+
+  /**
+   * Per-client homepage hero copy, or null for the template default.
+   *
+   * On `clients` rather than `firm_settings` for the same reason `features`
+   * is: this is template presentation keyed to the tenant, not part of the
+   * business record `firm_settings` holds, and the tenant row is already
+   * loaded wherever the hero renders.
+   *
+   * jsonb rather than eight columns because it is one composed object edited
+   * as a unit — the four stat tiles are positional and only meaningful
+   * together. Null means `DEFAULT` in lib/premium-v2/positioning.ts, which
+   * stays in code so a newly created client has a working hero with no data
+   * entry at all.
+   */
+  heroCopy: jsonb("hero_copy").$type<HeroCopyValue>(),
   displayName: text("display_name").notNull(),
   customDomain: varchar("custom_domain", { length: 255 }),
   isActive: boolean("is_active").notNull().default(true),

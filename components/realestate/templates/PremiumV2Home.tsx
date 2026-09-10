@@ -93,7 +93,7 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
   // `claim` stat keeps whatever value the positioning file states — those are
   // the client's assertions (years in business, families placed), which no
   // query can verify.
-  const heroCopy = heroCopyFor(tenant.slug, settings.firmName);
+  const heroCopy = heroCopyFor(tenant, settings.firmName);
   const medianOf = (values: number[]) => {
     const sorted = values.filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
     return sorted.length ? sorted[Math.floor(sorted.length / 2)] : null;
