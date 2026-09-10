@@ -29,6 +29,7 @@ import {
 import { cn } from "./gp-primitives";
 import { openLeadPopup } from "./leadPopup";
 import { joinPath } from "@/lib/paths";
+import BrandMark from "@/components/site/BrandMark";
 
 const NAV_LINK =
   // 12.75px is the 15px this bar used, less 15% — the ask was a quieter nav,
@@ -77,8 +78,11 @@ interface ToolLink {
 interface HeaderV2Props {
   firmName: string;
   /** Per-tenant, from firm_settings.logo_url — this template now serves more
-   *  than one real-estate client, so the mark can't be a module constant. */
-  logoUrl: string;
+   *  than one real-estate client, so the mark can't be a module constant.
+   *  Nullable: a client created from the platform dashboard has no logo until
+   *  one is uploaded, and this is the only header that renders the mark alone
+   *  with no accompanying firm name. */
+  logoUrl: string | null;
   phone?: string | null;
   basePath: string;
   navItems: NavItem[];
@@ -237,15 +241,37 @@ export default function HeaderV2({
       )}
     >
       <div className="gp-container flex items-center justify-between gap-3 py-4 lg:py-5">
-        <Link href={basePath || "/"} className="flex min-w-0 shrink-0 items-center">
-          <Image
-            src={logoUrl}
-            alt={firmName}
-            width={220}
-            height={73}
-            priority
-            className="h-14 w-auto object-contain sm:h-16"
-          />
+        <Link href={basePath || "/"} className="flex min-w-0 shrink-0 items-center gap-2.5">
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={firmName}
+              width={220}
+              height={73}
+              priority
+              className="h-14 w-auto object-contain sm:h-16"
+            />
+          ) : (
+            // No logo configured yet — the vertical's built-in mark plus the
+            // firm's own name. An unguarded <Image src=""> renders a broken-
+            // image icon in the header of every page on the site, which is what
+            // a dashboard-created client got before its first logo upload.
+            // The name is real data the operator entered; nothing is invented.
+            <>
+              <BrandMark
+                className="h-10 w-auto shrink-0 sm:h-11"
+                alt={firmName}
+                vertical="realestate"
+                onDark
+              />
+              {/* Capped rather than flex-shrunk: the Link is `shrink-0` so the
+                  nav keeps its width, and a long firm name would otherwise
+                  push the bar instead of ellipsing. */}
+              <span className="font-display max-w-[46vw] truncate text-[19px] leading-tight text-white sm:max-w-70 sm:text-[22px]">
+                {firmName}
+              </span>
+            </>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-0.5 lg:flex">

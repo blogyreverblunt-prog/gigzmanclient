@@ -9,6 +9,7 @@ import ContactChannelsV2 from "./ContactChannelsV2";
 import ContactAdvisorsCompactV2 from "./ContactAdvisorsCompactV2";
 import ContactFollowUpV2 from "./ContactFollowUpV2";
 import ContactFaqV2 from "./ContactFaqV2";
+import { whatsappHref } from "@/lib/whatsapp";
 import { GpContainer, GpEyebrow, GpSection } from "./gp-primitives";
 import { basePathFor, joinPath, type Tenant } from "@/lib/tenant";
 import { getFirmSettings, getServices } from "@/lib/content";
@@ -46,9 +47,7 @@ export default async function PremiumV2ContactPage({
   const mapCoordinates =
     settings.latitude && settings.longitude ? `${settings.latitude},${settings.longitude}` : null;
   const telHref = settings.phone ? `tel:${settings.phone.replace(/\s/g, "")}` : null;
-  const whatsappHref = settings.whatsapp
-    ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`
-    : null;
+  const waLink = whatsappHref(settings.whatsapp, settings.country);
 
   return (
     <>
@@ -159,9 +158,9 @@ export default async function PremiumV2ContactPage({
                     </div>
                   ) : null}
 
-                  {whatsappHref ? (
+                  {waLink ? (
                     <a
-                      href={whatsappHref}
+                      href={waLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-1 inline-flex min-h-[42px] items-center gap-2 rounded-[var(--gp-radius-sm)] bg-[color:var(--gp-gold-600)] px-4 text-[12.5px] font-semibold uppercase tracking-[0.04em] text-[color:var(--gp-forest-950)] transition-colors hover:bg-[color:var(--gp-gold-300)]"
@@ -228,7 +227,7 @@ export default async function PremiumV2ContactPage({
 
       <ContactAdvisorsCompactV2
         phone={settings.phone}
-        whatsapp={settings.whatsapp}
+        whatsapp={settings.whatsapp} country={settings.country}
         advisorsHref={`${p("/")}#advisors`}
       />
 

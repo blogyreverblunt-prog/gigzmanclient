@@ -205,7 +205,7 @@ export default async function PremiumV2AboutPage({ tenant }: { tenant: Tenant })
 
       {/* ── People Before Portals ───────────────────────────────────── */}
       <div id="advisors" className="scroll-mt-24">
-        <AdvisorsV2 phone={settings.phone} whatsapp={settings.whatsapp} />
+        <AdvisorsV2 phone={settings.phone} whatsapp={settings.whatsapp} country={settings.country} />
       </div>
 
       {/* ── The Work Behind The Shortlist ───────────────────────────── */}

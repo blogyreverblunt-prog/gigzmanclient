@@ -154,7 +154,7 @@ export default async function SiteLayout({
         <Suspense fallback={<div className="h-[88px] lg:h-[104px]" />}>
           <HeaderV2
             firmName={settings.firmName}
-            logoUrl={settings.logoUrl ?? ""}
+            logoUrl={settings.logoUrl}
             phone={settings.phone}
             basePath={basePath || "/"}
             navItems={navItems}
@@ -174,7 +174,7 @@ export default async function SiteLayout({
           logoUrl={settings.logoUrl}
           basePath={basePath || "/"}
           phone={settings.phone}
-          whatsapp={settings.whatsapp}
+          whatsapp={settings.whatsapp} country={settings.country}
           navItems={navItems}
           contactHref={p("/contact")}
         />
@@ -226,11 +226,15 @@ export default async function SiteLayout({
       {isPremiumV2 ? (
         <>
           {settings.whatsapp ? (
-            <WhatsAppFloatV2 number={settings.whatsapp} firmName={settings.firmName} />
+            <WhatsAppFloatV2
+              number={settings.whatsapp}
+              country={settings.country}
+              firmName={settings.firmName}
+            />
           ) : null}
           <MobileActionBarV2
             phone={settings.phone}
-            whatsapp={settings.whatsapp}
+            whatsapp={settings.whatsapp} country={settings.country}
             firmName={settings.firmName}
             googleMapsUrl={settings.googleMapsUrl}
           />

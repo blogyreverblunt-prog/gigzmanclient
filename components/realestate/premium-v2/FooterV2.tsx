@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LockKeyhole, Mail, MapPin, Phone } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { joinPath } from "@/lib/paths";
+import { whatsappHref } from "@/lib/whatsapp";
 import WhatsAppIconV2 from "./WhatsAppIconV2";
 import SocialIconV2 from "./SocialIconV2";
 import { NoiseTextureV2 } from "./NoiseTextureV2";
@@ -81,7 +82,7 @@ export default function FooterV2({ settings, basePath, homeLoanEnabled }: Footer
   ];
 
   const telHref = settings.phone ? `tel:${settings.phone.replace(/\s/g, "")}` : null;
-  const waHref = settings.whatsapp ? `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}` : null;
+  const waHref = whatsappHref(settings.whatsapp, settings.country);
   const socialLinks = (settings.socialLinks ?? {}) as Record<string, string>;
 
   const addressParts = [settings.addressLine, settings.locality, settings.region, settings.postalCode].filter(

@@ -1,5 +1,6 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import { analytics } from "@/lib/analytics";
 import WhatsAppIconV2 from "./WhatsAppIconV2";
 
@@ -11,18 +12,26 @@ import WhatsAppIconV2 from "./WhatsAppIconV2";
  */
 export default function WhatsAppFloatV2({
   number,
+  country,
   firmName,
 }: {
   number: string;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   firmName: string;
 }) {
-  const digits = number.replace(/\D/g, "");
-  const international = digits.length === 10 ? `91${digits}` : digits.replace(/^0/, "91");
-  const message = encodeURIComponent(`Hello ${firmName}, I would like to discuss a requirement.`);
+  // Was one of three places that got the country code right while six others
+  // got it wrong; all nine now share lib/whatsapp.ts so they cannot diverge.
+  const href = whatsappHref(
+    number,
+    country,
+    `Hello ${firmName}, I would like to discuss a requirement.`,
+  );
+  if (!href) return null;
 
   return (
     <a
-      href={`https://wa.me/${international}?text=${message}`}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => analytics.clickWhatsapp("float", "site")}

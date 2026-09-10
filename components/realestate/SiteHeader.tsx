@@ -1,5 +1,6 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,6 +19,8 @@ interface SiteHeaderProps {
   basePath: string;
   phone: string | null;
   whatsapp: string | null;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   navItems: NavItem[];
   contactHref: string;
 }
@@ -35,6 +38,7 @@ export default function SiteHeader({
   basePath,
   phone,
   whatsapp,
+  country,
   navItems,
   contactHref,
 }: SiteHeaderProps) {
@@ -86,9 +90,9 @@ export default function SiteHeader({
             </a>
           ) : null}
 
-          {whatsapp ? (
+          {whatsappHref(whatsapp, country) ? (
             <a
-              href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+              href={whatsappHref(whatsapp, country)!}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden items-center gap-1.5 text-[13px] font-medium text-ink-muted hover:text-navy lg:inline-flex"

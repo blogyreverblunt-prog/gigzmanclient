@@ -1,5 +1,6 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
@@ -7,6 +8,8 @@ import { MessageCircle } from "lucide-react";
 interface ShortlistFormProps {
   action: string;
   whatsapp: string | null;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   localities: string[];
 }
 
@@ -35,7 +38,8 @@ const FIELD =
  * happens through the contact form or WhatsApp rather than collecting
  * contact details in the hero itself.
  */
-export default function ShortlistForm({ action, whatsapp, localities }: ShortlistFormProps) {
+export default function ShortlistForm({ action, whatsapp,
+  country, localities }: ShortlistFormProps) {
   const router = useRouter();
   const [intent, setIntent] = useState<string>("buy");
   const [budget, setBudget] = useState("");
@@ -128,9 +132,9 @@ export default function ShortlistForm({ action, whatsapp, localities }: Shortlis
         Build My Shortlist
       </button>
 
-      {whatsapp ? (
+      {whatsappHref(whatsapp, country) ? (
         <a
-          href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+          href={whatsappHref(whatsapp, country)!}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-2.5 flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[6px] border border-line-strong text-[13.5px] font-medium text-navy hover:border-navy"

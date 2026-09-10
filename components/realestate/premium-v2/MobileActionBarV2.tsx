@@ -1,5 +1,6 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import { MapPin, Phone } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import WhatsAppIconV2 from "./WhatsAppIconV2";
@@ -11,24 +12,24 @@ import WhatsAppIconV2 from "./WhatsAppIconV2";
 export default function MobileActionBarV2({
   phone,
   whatsapp,
+  country,
   firmName,
   googleMapsUrl,
 }: {
   phone?: string | null;
   whatsapp?: string | null;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   firmName: string;
   googleMapsUrl?: string | null;
 }) {
   const telHref = phone ? `tel:${phone.replace(/\s/g, "")}` : null;
 
-  const waDigits = whatsapp?.replace(/\D/g, "") ?? "";
-  const waInternational =
-    waDigits.length === 10 ? `91${waDigits}` : waDigits.replace(/^0/, "91");
-  const waHref = waDigits
-    ? `https://wa.me/${waInternational}?text=${encodeURIComponent(
-        `Hello ${firmName}, I would like to discuss a requirement.`,
-      )}`
-    : null;
+  const waHref = whatsappHref(
+    whatsapp,
+    country,
+    `Hello ${firmName}, I would like to discuss a requirement.`,
+  );
 
   if (!telHref && !waHref && !googleMapsUrl) return null;
 

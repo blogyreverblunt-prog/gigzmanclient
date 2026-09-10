@@ -1,3 +1,4 @@
+import { whatsappHref } from "@/lib/whatsapp";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, eq, desc, asc } from "drizzle-orm";
@@ -41,9 +42,8 @@ export default async function QueryDetailPage(props: PageProps<"/site/[tenant]/d
       .orderBy(asc(queryStatusHistory.changedAt)),
   ]);
 
-  const waNumber = query.phone?.replace(/\D/g, "");
-  const waInternational =
-    waNumber && waNumber.length === 10 ? `91${waNumber}` : waNumber?.replace(/^0/, "91");
+  // The ENQUIRER's number, not the firm's — same normalisation, same helper.
+  const waLink = whatsappHref(query.phone);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -75,9 +75,9 @@ export default async function QueryDetailPage(props: PageProps<"/site/[tenant]/d
               Call
             </a>
           ) : null}
-          {waInternational ? (
+          {waLink ? (
             <a
-              href={`https://wa.me/${waInternational}`}
+              href={waLink}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[8px] border border-line-strong bg-surface px-3 text-[13px] text-navy hover:border-navy"

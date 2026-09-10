@@ -1,5 +1,6 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import { useState } from "react";
 import Image from "next/image";
 import { analytics } from "@/lib/analytics";
@@ -20,22 +21,35 @@ const FIELD =
 
 export default function ShortlistCtaV2({
   whatsapp,
+  country,
   firmName,
 }: {
   whatsapp?: string | null;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   firmName: string;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [intent, setIntent] = useState<(typeof INTENTS)[number]>("Buy");
 
+  // Resolved once, and it is what decides whether the button is offered at
+  // all. Previously `submit` returned early when there was no number, so the
+  // button rendered, accepted a click and did nothing whatsoever — no message,
+  // no error, nothing. A visitor cannot tell that from a slow network, and the
+  // enquiry is simply lost. A control that cannot do its job must say so
+  // rather than pretend.
+  const waLink = whatsappHref(
+    whatsapp,
+    country,
+    `Hi ${firmName}, I'm ${name || "interested"} and I want to ${intent.toLowerCase()}. My number is ${phone || "—"}.`,
+  );
+
   function submit(event: React.FormEvent) {
     event.preventDefault();
     analytics.shortlistRequest(intent.toLowerCase());
-    if (!whatsapp) return;
-
-    const message = `Hi ${firmName}, I'm ${name || "interested"} and I want to ${intent.toLowerCase()}. My number is ${phone || "—"}.`;
-    window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    if (!waLink) return;
+    window.open(waLink, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -141,14 +155,17 @@ export default function ShortlistCtaV2({
 
               <button
                 type="submit"
-                className="mt-5 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[var(--gp-radius-sm)] bg-[color:var(--gp-gold-600)] px-5 text-[13.5px] font-bold uppercase tracking-[0.04em] text-[color:var(--gp-forest-950)] transition-colors hover:bg-[color:var(--gp-gold-300)]"
+                disabled={!waLink}
+                className="mt-5 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[var(--gp-radius-sm)] bg-[color:var(--gp-gold-600)] px-5 text-[13.5px] font-bold uppercase tracking-[0.04em] text-[color:var(--gp-forest-950)] transition-colors hover:bg-[color:var(--gp-gold-300)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <WhatsAppIconV2 className="h-4 w-4" />
                 WhatsApp Now
               </button>
 
               <p className="mt-3 text-center text-[11.5px] text-[color:var(--gp-muted)]">
-                Free. No obligation. 100% confidential.
+                {waLink
+                  ? "Free. No obligation. 100% confidential."
+                  : "WhatsApp enquiries are not set up for this office yet — use the phone number above."}
               </p>
             </form>
           </div>

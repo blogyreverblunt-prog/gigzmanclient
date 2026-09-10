@@ -1,5 +1,6 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Phone } from "lucide-react";
@@ -49,10 +50,13 @@ const ADVISORS: Advisor[] = [
 export default function ContactAdvisorsCompactV2({
   phone,
   whatsapp,
+  country,
   advisorsHref,
 }: {
   phone?: string | null;
   whatsapp?: string | null;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   advisorsHref: string;
 }) {
   return (
@@ -119,9 +123,9 @@ export default function ContactAdvisorsCompactV2({
                       Call
                     </a>
                   ) : null}
-                  {whatsapp ? (
+                  {whatsappHref(whatsapp, country) ? (
                     <a
-                      href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
+                      href={whatsappHref(whatsapp, country)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => analytics.clickWhatsapp("advisor_panel", "contact")}

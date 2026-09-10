@@ -168,9 +168,9 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
           p={p}
         />
       ) : null}
-      <ShortlistCtaV2 whatsapp={settings.whatsapp} firmName={settings.firmName} />
+      <ShortlistCtaV2 whatsapp={settings.whatsapp} country={settings.country} firmName={settings.firmName} />
       <DeveloperRibbonV2 p={p} />
-      <AdvisorsV2 phone={settings.phone} whatsapp={settings.whatsapp} />
+      <AdvisorsV2 phone={settings.phone} whatsapp={settings.whatsapp} country={settings.country} />
       <MarketIntelligenceV2 localities={localities} basePath={basePath} />
       {propertyMapSectionEnabled(tenant) ? (
         <MapSelectedPropertyV2

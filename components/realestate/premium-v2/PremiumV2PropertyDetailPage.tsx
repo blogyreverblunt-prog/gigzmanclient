@@ -1,3 +1,4 @@
+import { whatsappHref } from "@/lib/whatsapp";
 import Link from "next/link";
 import {
   BedDouble,
@@ -200,11 +201,11 @@ export default function PremiumV2PropertyDetailPage({
     .join(", ");
 
   const telHref = settings.phone ? `tel:${settings.phone.replace(/\s/g, "")}` : null;
-  const whatsappHref = settings.whatsapp
-    ? `https://wa.me/${settings.whatsapp.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
-        `Hi, I'm interested in ${property.title} (${p(`/properties/${property.slug}`)})`,
-      )}`
-    : null;
+  const waLink = whatsappHref(
+    settings.whatsapp,
+    settings.country,
+    `Hi, I'm interested in ${property.title} (${p(`/properties/${property.slug}`)})`,
+  );
 
   const specs = (property.specs && typeof property.specs === "object" ? property.specs : {}) as Record<
     string,
@@ -469,11 +470,11 @@ export default function PremiumV2PropertyDetailPage({
                     : "Share your requirement and we will confirm the current band."}
               </p>
 
-              {telHref || whatsappHref ? (
+              {telHref || waLink ? (
                 <div className="mt-5 flex flex-wrap gap-2.5">
                   {telHref ? <PremiumV2CallLink telHref={telHref} phone={settings.phone!} /> : null}
-                  {whatsappHref ? (
-                    <PremiumV2WhatsappLink whatsappHref={whatsappHref} propertyId={property.id} />
+                  {waLink ? (
+                    <PremiumV2WhatsappLink whatsappHref={waLink} propertyId={property.id} />
                   ) : null}
                 </div>
               ) : null}

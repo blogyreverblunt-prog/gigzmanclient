@@ -1,10 +1,13 @@
 "use client";
 
+import { whatsappHref } from "@/lib/whatsapp";
 import { MessageCircle } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 
 interface WhatsAppFloatProps {
   number: string;
+  /** From firm_settings.country; decides the dialling code. */
+  country?: string | null;
   firmName: string;
 }
 
@@ -12,18 +15,14 @@ interface WhatsAppFloatProps {
  * Present on the large majority of Indian CA practice sites — clients expect to
  * reach the firm this way, so its absence reads as an incomplete site locally.
  */
-export default function WhatsAppFloat({ number, firmName }: WhatsAppFloatProps) {
-  const digits = number.replace(/\D/g, "");
-  // Indian mobile numbers are commonly published as 10 digits or with a leading 0.
-  const international = digits.length === 10 ? `91${digits}` : digits.replace(/^0/, "91");
+export default function WhatsAppFloat({ number, country, firmName }: WhatsAppFloatProps) {
+  const href = whatsappHref(number, country, `Hello ${firmName}, I would like to discuss a requirement.`);
+  if (!href) return null;
 
-  const message = encodeURIComponent(
-    `Hello ${firmName}, I would like to discuss a requirement.`,
-  );
 
   return (
     <a
-      href={`https://wa.me/${international}?text=${message}`}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => analytics.clickWhatsapp("float", "site")}
