@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { parse } from "yaml";
@@ -37,9 +37,10 @@ import { TEMPLATE_REGISTRY } from "../lib/templates";
 
 const slug = process.argv[2];
 const force = process.argv.includes("--force");
+const overwriteDashboardEdits = process.argv.includes("--overwrite-dashboard-edits");
 
 if (!slug) {
-  console.error("Usage: pnpm seed:client <client-slug> [--force]");
+  console.error("Usage: pnpm seed:client <client-slug> [--force] [--overwrite-dashboard-edits]");
   process.exit(1);
 }
 
@@ -96,6 +97,80 @@ async function main() {
         `template this codebase can render. Valid keys: ${Object.keys(TEMPLATE_REGISTRY).join(", ")}. ` +
         `Nothing was written.`,
     );
+  }
+
+  // ------------------------------------------------- dashboard-edit guard
+  //
+  // `--force` makes every upsert write the YAML values into the update set, so
+  // it overwrites anything edited since the last seed. That was safe while the
+  // YAML was the only way content got in. It stopped being safe the moment the
+  // platform dashboard and the tenant dashboard could both write these rows:
+  // a well-meaning `--force` re-seed silently reverts a client's live site to
+  // whatever the checked-in file last said.
+  //
+  // `firm_settings.updated_at` is the marker because both dashboards touch it
+  // and the YAML's mtime is what a re-seed would be replaying. Compared before
+  // anything is written, so the refusal costs nothing.
+  //
+  // Deliberately advisory rather than clever: it does not diff field by field.
+  // Knowing that the database is newer is enough to make a human look, and a
+  // field-level diff would invite trusting it.
+  if (force && !overwriteDashboardEdits) {
+    const [existingClient] = await db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(eq(clients.slug, profile.slug))
+      .limit(1);
+
+    if (existingClient) {
+      const [settings] = await db
+        .select({ updatedAt: firmSettings.updatedAt })
+        .from(firmSettings)
+        .where(eq(firmSettings.clientId, existingClient.id))
+        .limit(1);
+
+      const yamlMtime = statSync(join(clientDir, "profile.yaml")).mtime;
+      if (settings?.updatedAt && settings.updatedAt > yamlMtime) {
+        const counts = await Promise.all(
+          (
+            [
+              ["properties", properties],
+              ["localities", localities],
+              ["services", services],
+              ["updates", professionalUpdates],
+              ["compliance events", complianceEvents],
+              ["legal pages", legalPages],
+              ["team members", teamMembers],
+            ] as const
+          ).map(async ([label, table]) => {
+            const rows = await db
+              .select({ id: table.id })
+              .from(table)
+              .where(eq(table.clientId, existingClient.id));
+            return `${rows.length} ${label}`;
+          }),
+        );
+
+        console.error(`\nRefusing to --force ${profile.slug}.`);
+        console.error(
+          `\n  The database is newer than the YAML:\n` +
+            `    firm_settings.updated_at  ${settings.updatedAt.toISOString()}\n` +
+            `    profile.yaml modified     ${yamlMtime.toISOString()}\n`,
+        );
+        console.error(
+          `  Something edited this client through a dashboard after the file was\n` +
+            `  last written. --force would replay the file over it, affecting:\n` +
+            `    ${counts.join("\n    ")}\n`,
+        );
+        console.error(
+          `  If the file really is the version you want, re-run with\n` +
+            `    pnpm seed:client ${profile.slug} --force --overwrite-dashboard-edits\n\n` +
+            `  To capture the live state into YAML first:\n` +
+            `    pnpm export:client ${profile.slug}\n`,
+        );
+        process.exit(1);
+      }
+    }
   }
 
   // ---------------------------------------------------------------- client

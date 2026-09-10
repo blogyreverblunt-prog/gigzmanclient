@@ -114,3 +114,77 @@ console.log(
   `\n${"─".repeat(64)}\n${totalPlaceholder} placeholder · ${totalPending} pending across ${targets.length} client(s)`,
 );
 console.log("Nothing here blocks the build — this is the pre-delivery checklist.\n");
+
+/**
+ * Clients that exist in the database but have no `clients/<slug>/` folder.
+ *
+ * This checker walks directories, so before CD-09 such a client produced no
+ * output at all and the script still exited 0 — which reads as a clean bill of
+ * health for a site that was never checked. CD-03b's wizard makes that the
+ * normal case rather than an edge case: a client created from the dashboard has
+ * no YAML by design.
+ *
+ * Reported rather than audited. The `_status` vocabulary is a judgement about
+ * whether a claim was confirmed against a named source, and the database does
+ * not carry that — so the honest output is "this client is not covered by this
+ * check", plus the empty fields that are checkable without inventing provenance.
+ * `pnpm export:client <slug>` is what brings one into scope properly.
+ */
+async function reportDatabaseOnlyClients() {
+  const { db } = await import("../lib/db");
+  const { clients, firmSettings } = await import("../lib/db/schema");
+  const { eq } = await import("drizzle-orm");
+
+  const rows = await db
+    .select({
+      slug: clients.slug,
+      displayName: clients.displayName,
+      isActive: clients.isActive,
+      settingsId: firmSettings.id,
+      phone: firmSettings.phone,
+      email: firmSettings.email,
+      addressLine: firmSettings.addressLine,
+      notificationEmail: firmSettings.notificationEmail,
+    })
+    .from(clients)
+    .leftJoin(firmSettings, eq(firmSettings.clientId, clients.id));
+
+  const orphans = rows.filter((row) => !existsSync(join(clientsDir, row.slug)));
+  if (orphans.length === 0) return;
+
+  console.log(`${"─".repeat(64)}`);
+  console.log(`NOT COVERED BY THIS CHECK — no clients/<slug>/ folder (${orphans.length})`);
+  console.log(`${"─".repeat(64)}\n`);
+  for (const row of orphans) {
+    console.log(`  ${row.slug}${row.isActive ? "" : "  (inactive)"} — ${row.displayName}`);
+    if (!row.settingsId) {
+      console.log("    · no firm_settings row at all");
+      continue;
+    }
+    const missing = [
+      ["phone", row.phone],
+      ["email", row.email],
+      ["address", row.addressLine],
+      ["notification email (leads have nowhere to go)", row.notificationEmail],
+    ]
+      .filter(([, value]) => !value)
+      .map(([label]) => label);
+    if (missing.length > 0) console.log(`    · empty: ${missing.join(", ")}`);
+    else console.log("    · core contact fields are filled");
+  }
+  console.log("\n  Run `pnpm export:client <slug>` to bring one into this checklist.\n");
+}
+
+// Only when the database is reachable. A missing DATABASE_URL must not turn the
+// YAML checklist — which needs no database — into a failure.
+//
+// `process.exit` rather than letting the process end on its own: the postgres
+// client holds an open pool, so without it the script prints its whole report
+// and then hangs forever.
+reportDatabaseOnlyClients()
+  .catch((error) => {
+    console.log(`${"─".repeat(64)}`);
+    console.log("Could not check for database-only clients:", (error as Error).message);
+    console.log("Any client created from the dashboard is NOT covered by the report above.\n");
+  })
+  .finally(() => process.exit(0));

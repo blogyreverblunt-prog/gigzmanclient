@@ -29,7 +29,8 @@ tests pass, and do not invent a command. What actually exists:
 | `pnpm check:content <slug>` | Placeholder / pending / duplicate-content checklist before delivery |
 | `pnpm dry-run [baseUrl]` | Playwright sweep of every page at three viewports. ⚠️ Currently **stale** — references removed templates (`temp-luxury-showcase`, `temp-advisory`, …) and will fail until updated |
 | `pnpm db:generate` / `db:migrate` | Drizzle migrations |
-| `pnpm seed:client <slug> [--force]` | Load a client's YAML into the database |
+| `pnpm seed:client <slug> [--force]` | Load a client's YAML into the database. `--force` refuses when the database is newer than the YAML — a dashboard edit would be overwritten — unless `--overwrite-dashboard-edits` is also passed |
+| `pnpm export:client <slug>` | The reverse: regenerate `clients/<slug>/` from the database, so the checked-in file says what the live site says. Preserves `_status` and the file header; inline body comments are lost, so read the diff |
 
 `playwright` is a devDependency for `dry-run` only. Its browser binaries may not
 be installed (`npx playwright install chromium`).

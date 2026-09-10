@@ -45,12 +45,17 @@ Add one by dropping a folder under `clients/`, setting `template: premium-v2`
 in its `profile.yaml` (real-estate tenants only — `pnpm seed:client` writes it
 to `clients.template_key`), and running `pnpm seed:client <slug>`.
 
+Or create one from the gated dashboard at `/` — **New client** writes the same
+rows directly and needs no YAML, no code edit and no deploy. A client created
+that way has no `clients/<slug>/` folder until `pnpm export:client` makes one.
+
 ## Content scripts
 
 | Command | What |
 |---|---|
-| `pnpm seed:client <slug> [--force]` | Load a client's YAML into the database |
-| `pnpm check:content <slug>` | Placeholder / pending checklist before delivery |
+| `pnpm seed:client <slug> [--force]` | Load a client's YAML into the database. `--force` refuses if the database is newer than the file — pass `--overwrite-dashboard-edits` to override |
+| `pnpm export:client <slug>` | Regenerate `clients/<slug>/` from the database. Run it after dashboard edits so the checked-in file matches the live site |
+| `pnpm check:content <slug>` | Placeholder / pending checklist before delivery. Also lists clients that exist only in the database and are therefore not covered |
 | `pnpm tsx --env-file=.env.local scripts/prune-client-content.ts <slug>` | Delete rows whose slug has left the YAML — `seed --force` overwrites but never deletes |
 | `node scripts/import-farmhouses.mjs` | Rebuild Evergreen's listings from `source-data/` |
 
