@@ -131,12 +131,19 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
   const mapCoordinates =
     settings.latitude && settings.longitude ? `${settings.latitude},${settings.longitude}` : null;
 
-  if (!flagship || !tallProperty || !midProperties[0] || !midProperties[1]) {
-    // Not enough seeded inventory to build the asymmetric grid — skip it
-    // rather than render with undefined props (shouldn't happen once
-    // clients/geeta-properties/content/properties.yaml is seeded).
-    return null;
-  }
+  // The asymmetric HOT-properties grid needs exactly four listings and takes
+  // them as required props, so it cannot render for a client with fewer.
+  //
+  // This used to `return null` from the whole component, which skipped the
+  // ENTIRE home page rather than the one grid — the comment said "skip it"
+  // and meant the section. It was unreachable while every tenant was seeded
+  // from YAML with a full inventory. CD-03b made it reachable and normal: a
+  // client created from the dashboard starts with no properties at all, so
+  // its brand-new site rendered a blank page with a footer and nothing else.
+  const hotProperties =
+    flagship && tallProperty && midProperties[0] && midProperties[1]
+      ? { flagship, tallProperty, midProperties }
+      : null;
 
   return (
     <>
@@ -152,13 +159,15 @@ export default async function PremiumV2Home({ tenant }: { tenant: Tenant }) {
       <DocumentationV2 p={p} phone={settings.phone} />
       <NewLaunchesV2 properties={newlyLaunched} imageMap={imageMap} p={p} />
       <CorridorPanoramaV2 localities={localities} basePath={basePath} />
-      <HotPropertiesGridV2
-        flagship={flagship}
-        midProperties={midProperties}
-        tallProperty={tallProperty}
-        imageMap={imageMap}
-        p={p}
-      />
+      {hotProperties ? (
+        <HotPropertiesGridV2
+          flagship={hotProperties.flagship}
+          midProperties={hotProperties.midProperties}
+          tallProperty={hotProperties.tallProperty}
+          imageMap={imageMap}
+          p={p}
+        />
+      ) : null}
       <ShortlistCtaV2 whatsapp={settings.whatsapp} firmName={settings.firmName} />
       <DeveloperRibbonV2 p={p} />
       <AdvisorsV2 phone={settings.phone} whatsapp={settings.whatsapp} />
