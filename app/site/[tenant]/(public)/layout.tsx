@@ -47,11 +47,25 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { tenant } = await params;
   const row = await getTenantBySlug(tenant);
+  // The icon set and the share-image override both live on `firm_settings`
+  // since CD-05, so this needs the settings row as well as the client row.
+  const settings = row ? await getFirmSettings(row.id) : null;
   return {
     // Required for Open Graph: relative image paths in page metadata are
     // resolved against this, and OG requires absolute URLs.
     metadataBase: originFor(row?.customDomain),
-    icons: iconsFor(tenant),
+    icons: iconsFor(settings?.iconBaseUrl),
+    // An uploaded share image replaces the generated card for every page of
+    // this tenant. Left unset, `opengraph-image.tsx` composes one from the
+    // logo and settings, which is the better default — this is the escape
+    // hatch for a client who has had one designed.
+    ...(settings?.ogImageUrl
+      ? {
+          openGraph: {
+            images: [{ url: settings.ogImageUrl, width: 1200, height: 630 }],
+          },
+        }
+      : {}),
   };
 }
 

@@ -2,8 +2,6 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { randomBytes } from "node:crypto";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
-import { join } from "node:path";
 import { eq, and, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
@@ -20,6 +18,7 @@ import {
   localities,
 } from "@/lib/db/schema";
 import { requireUser, requireAdmin } from "@/lib/auth";
+import { putObject, deleteObject } from "@/lib/storage";
 import { tenantDataTag } from "@/lib/cache-tags";
 import { SITEMAP_FAMILIES } from "@/lib/sitemap";
 import { slugify } from "@/lib/format";
@@ -639,13 +638,18 @@ export async function uploadPropertyImage(formData: FormData): Promise<ActionRes
       return { ok: false, message: "Only JPEG, PNG or WebP images are accepted." };
     }
 
-    const dir = join(process.cwd(), "public", "uploads", user.clientId, propertyId);
-    await mkdir(dir, { recursive: true });
+    // Storage goes through the seam rather than straight to disk: the local
+    // backend is this same public/uploads write, and a production deployment
+    // with BLOB_READ_WRITE_TOKEN set stores durably instead. Vercel’s
+    // filesystem is ephemeral, so the disk write alone uploads successfully
+    // and 404s after the next deploy.
     const filename = `${randomBytes(16).toString("hex")}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(join(dir, filename), buffer);
-
-    const publicPath = `/uploads/${user.clientId}/${propertyId}/${filename}`;
+    const publicPath = await putObject(
+      `${user.clientId}/${propertyId}/${filename}`,
+      buffer,
+      file.type,
+    );
 
     const existingImages = await db
       .select()
@@ -688,7 +692,7 @@ export async function deletePropertyImage(formData: FormData): Promise<ActionRes
     // Best-effort — a missing file on disk (e.g. after a redeploy on an
     // ephemeral filesystem) should not block removing the database row.
     try {
-      await unlink(join(process.cwd(), "public", image.path));
+      await deleteObject(image.path);
     } catch {
       // ignore
     }

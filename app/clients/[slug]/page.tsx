@@ -10,6 +10,7 @@ import { getTemplateConfig, getTenantPath, templateKeyFor } from "@/lib/template
 import ClientIdentityForm from "@/components/platform/ClientIdentityForm";
 import BusinessDetailsForm from "@/components/platform/BusinessDetailsForm";
 import FeatureToggles from "@/components/platform/FeatureToggles";
+import BrandingPanel from "@/components/platform/BrandingPanel";
 
 /**
  * The per-client edit screen: three independently-saved panels, so a refusal in
@@ -196,6 +197,15 @@ export default async function ClientEditPage({
             </p>
           )}
 
+          {settings ? (
+            <BrandingPanel
+              clientId={client.id}
+              firmName={settings.firmName}
+              logoUrl={settings.logoUrl}
+              iconBaseUrl={settings.iconBaseUrl}
+              ogImageUrl={settings.ogImageUrl}
+            />
+          ) : null}
           {/*
             All five flags gate premium-v2 real-estate surfaces, so there is
             nothing here to configure for another vertical — and one of them,

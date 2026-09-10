@@ -19,6 +19,16 @@ import {
   TAX_YEAR,
 } from "@/lib/calculators/registry";
 import { tenantDataTag, tenantSlugTag } from "@/lib/cache-tags";
+import { putObject, deleteObject } from "@/lib/storage";
+import {
+  ACCEPTED_LOGO_TYPES,
+  ICON_SIZES,
+  ImageRejected,
+  MAX_LOGO_BYTES,
+  buildIconSet,
+  buildOgImage,
+  normaliseLogo,
+} from "@/lib/brand-images";
 import { SITEMAP_FAMILIES } from "@/lib/sitemap";
 import { featureEnabled, type ClientFeatures } from "@/lib/features";
 import { vastuSectorTenants } from "@/lib/platform/clients";
@@ -603,6 +613,110 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
         adminEmail,
         password,
       },
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────── branding
+
+/**
+ * One upload produces every brand asset this client needs.
+ *
+ * The alternative was three uploads — logo, favicon, share card — and it is a
+ * worse design for the person doing the work: the three are always cut from the
+ * same mark, and asking a non-technical operator to produce a 512px square and
+ * a 1200x630 card from a supplied wordmark is asking them to own a design task
+ * they cannot do. One file in, `lib/brand-images.ts` derives the rest.
+ *
+ * The share card stays overridable separately (`ogImageUrl` is editable in its
+ * own right) for the client who has had one designed, but nobody has to.
+ */
+export async function uploadClientBranding(formData: FormData): Promise<ActionResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const row = await loadClientRow(String(formData.get("clientId") ?? ""));
+    if (!row) return { ok: false, message: "Client not found." };
+
+    const file = formData.get("logo");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Choose a logo file to upload." };
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      return { ok: false, message: "The logo must be 5MB or smaller." };
+    }
+    // Validated server-side against the actual declared type, not the `accept`
+    // attribute — that is a hint to the file picker, not a constraint on a POST.
+    if (!Object.hasOwn(ACCEPTED_LOGO_TYPES, file.type)) {
+      return { ok: false, message: "Upload a PNG, JPEG, WebP or SVG file." };
+    }
+
+    const source = Buffer.from(await file.arrayBuffer());
+
+    let logo: Awaited<ReturnType<typeof normaliseLogo>>;
+    let icons: Awaited<ReturnType<typeof buildIconSet>>;
+    let ogImage: Buffer;
+    try {
+      // Sequential rather than Promise.all: if the logo is going to be rejected
+      // for being too small, there is no point rendering four favicons and a
+      // share card from it first.
+      logo = await normaliseLogo(source);
+      icons = await buildIconSet(source);
+      ogImage = await buildOgImage(source);
+    } catch (error) {
+      // A rejection is the operator's problem to fix and says how; anything else
+      // is ours and should not be dressed up as advice.
+      if (error instanceof ImageRejected) return { ok: false, message: error.message };
+      throw error;
+    }
+
+    // Content-addressed by a random stem so a re-upload never collides with the
+    // cached copy of its predecessor. Browsers and CDNs cache favicons hard, and
+    // reusing `logo.png` would leave the old mark on screen indefinitely.
+    const stem = randomBytes(8).toString("hex");
+    const base = `${row.id}/brand/${stem}`;
+
+    const [logoUrl] = await Promise.all([
+      putObject(`${base}-logo.png`, logo.png, "image/png"),
+      putObject(`${base}-logo.webp`, logo.webp, "image/webp"),
+      ...ICON_SIZES.map((size) =>
+        putObject(`${base}-icon-${size}.png`, icons[size], "image/png"),
+      ),
+      putObject(`${base}-og.jpg`, ogImage, "image/jpeg"),
+    ]);
+
+    // The icon base is stored without the size suffix; `iconsFor` appends it.
+    // Derived from the logo URL so the two cannot point at different uploads.
+    const iconBaseUrl = logoUrl.replace(/-logo\.png$/, "-icon");
+    const ogImageUrl = logoUrl.replace(/-logo\.png$/, "-og.jpg");
+
+    const [previous] = await db
+      .select({ logoUrl: firmSettings.logoUrl, iconBaseUrl: firmSettings.iconBaseUrl })
+      .from(firmSettings)
+      .where(eq(firmSettings.clientId, row.id))
+      .limit(1);
+
+    await db
+      .update(firmSettings)
+      .set({ logoUrl, iconBaseUrl, ogImageUrl, updatedAt: new Date() })
+      .where(eq(firmSettings.clientId, row.id));
+
+    // Only the previous UPLOADED logo is cleaned up. The five existing clients
+    // point at committed files under public/verticals/, which are part of the
+    // repository and must survive someone uploading over them — `deleteObject`
+    // only acts on `/uploads/` paths and blob URLs, so those are left alone.
+    if (previous?.logoUrl && previous.logoUrl !== logoUrl) {
+      await deleteObject(previous.logoUrl);
+    }
+
+    invalidateTenant(row);
+
+    return {
+      ok: true,
+      message: `Logo updated — rendered at ${logo.width}×${logo.height}, with a favicon set and a share card.`,
     };
   } catch (error) {
     unstable_rethrow(error);

@@ -164,6 +164,24 @@ export const firmSettings = pgTable("firm_settings", {
   /** Path or URL to the firm's logo; falls back to the built-in mark when unset. */
   logoUrl: text("logo_url"),
 
+  /**
+   * Base path of this client's favicon set, without the size suffix:
+   * `<base>-32.png`, `-180.png`, `-192.png`, `-512.png`. Stored as a base
+   * rather than four columns because the four are always generated together
+   * from one source image and never diverge.
+   *
+   * Replaces the hardcoded ICON_SETS map in lib/brand-icons.ts, which could
+   * only ever describe clients someone had edited that file for. Null means
+   * the app default — never another tenant's mark.
+   */
+  iconBaseUrl: text("icon_base_url"),
+
+  /**
+   * Per-client social share image. Null falls back to the shared
+   * public/brand/og-hero.jpg, which is what every client used before CD-05.
+   */
+  ogImageUrl: text("og_image_url"),
+
   /** [{ day, opens, closes, closed }] — drives both the UI and openingHoursSpecification. */
   openingHours: jsonb("opening_hours").$type<OpeningHour[]>().default([]),
   socialLinks: jsonb("social_links").$type<Record<string, string>>().default({}),

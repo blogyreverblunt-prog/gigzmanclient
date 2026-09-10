@@ -57,6 +57,13 @@
       "when": 1789023162082,
       "tag": "0007_chubby_runaways",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789034037793,
+      "tag": "0008_yellow_tana_nile",
+      "breakpoints": true
     }
   ]
 }
