@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
+import { findThinLocalities } from "../lib/content-rules";
 
 /**
  * Reports every client field that is not yet `verified`.
@@ -68,21 +69,10 @@ for (const target of targets) {
       const doc = parse(readFileSync(localitiesPath, "utf-8")) as {
         localities?: { slug: string; description?: string }[];
       };
-      const seen = new Map<string, string>();
-      const MIN_LENGTH = 120;
-      for (const loc of doc.localities ?? []) {
-        const desc = (loc.description ?? "").trim();
-        if (desc.length < MIN_LENGTH) {
-          thinLocalities.push(`${loc.slug} — description is ${desc.length} chars (min ${MIN_LENGTH})`);
-          continue;
-        }
-        const normalized = desc.toLowerCase().replace(/\s+/g, " ");
-        const dupOf = seen.get(normalized);
-        if (dupOf) {
-          thinLocalities.push(`${loc.slug} — description duplicates "${dupOf}"`);
-        } else {
-          seen.set(normalized, loc.slug);
-        }
+      // Shared with the dashboard's readiness panel so the two cannot
+      // disagree about the same rule — see lib/content-rules.ts.
+      for (const t of findThinLocalities(doc.localities ?? [])) {
+        thinLocalities.push(`${t.slug} — ${t.reason}`);
       }
     }
   }

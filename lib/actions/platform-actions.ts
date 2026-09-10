@@ -723,3 +723,47 @@ export async function uploadClientBranding(formData: FormData): Promise<ActionRe
     return fail(error);
   }
 }
+
+// ───────────────────────────────────────────────────────── search appearance
+
+/**
+ * The two paste-once technical fields, plus the optional title/description
+ * override.
+ *
+ * `seoTitle` and `seoDescription` are OVERRIDES, and empty means "generate
+ * one" — so they are written as NULL when blank rather than as an empty
+ * string. The distinction is the whole mechanism: a stored empty string would
+ * be indistinguishable from an override of "" and would suppress the generated
+ * text entirely.
+ *
+ * Nothing here ever writes the generated text into the columns. Doing so would
+ * freeze today's output, and the title would stop tracking the business name,
+ * category and locality it was composed from — which is exactly the failure
+ * that made per-page SEO fields useless on this kind of site in the first place.
+ */
+export async function updateClientSeo(formData: FormData): Promise<ActionResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const row = await loadClientRow(String(formData.get("clientId") ?? ""));
+    if (!row) return { ok: false, message: "Client not found." };
+
+    await db
+      .update(firmSettings)
+      .set({
+        seoTitle: text(formData, "seoTitle"),
+        seoDescription: text(formData, "seoDescription"),
+        ga4MeasurementId: text(formData, "ga4MeasurementId"),
+        searchConsoleVerification: text(formData, "searchConsoleVerification"),
+        updatedAt: new Date(),
+      })
+      .where(eq(firmSettings.clientId, row.id));
+
+    invalidateTenant(row);
+
+    return { ok: true, message: "Search appearance saved." };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}

@@ -11,6 +11,11 @@ import ClientIdentityForm from "@/components/platform/ClientIdentityForm";
 import BusinessDetailsForm from "@/components/platform/BusinessDetailsForm";
 import FeatureToggles from "@/components/platform/FeatureToggles";
 import BrandingPanel from "@/components/platform/BrandingPanel";
+import SearchAppearanceForm from "@/components/platform/SearchAppearanceForm";
+import ReadinessPanel from "@/components/platform/ReadinessPanel";
+import { clientReadiness } from "@/lib/platform/readiness";
+import { generatedHomeMeta } from "@/lib/seo/generated";
+import { getLocalities, getServices } from "@/lib/content";
 
 /**
  * The per-client edit screen: three independently-saved panels, so a refusal in
@@ -41,6 +46,20 @@ export default async function ClientEditPage({
   const found = await getClientForPlatform(slug);
   if (!found) notFound();
   const { client, settings } = found;
+
+  // Computed here rather than in the client component: the generated pair
+  // depends on the client's own localities and services, which are database
+  // reads. The form receives the result and previews it live as the operator
+  // types an override.
+  const [readiness, localityRows, serviceRows] = await Promise.all([
+    clientReadiness(client.id),
+    getLocalities(client.id),
+    getServices(client.id),
+  ]);
+  const generatedMeta = generatedHomeMeta(settings, client.vertical, {
+    localities: localityRows.map((l) => l.name),
+    serviceTitles: serviceRows.map((s) => s.title),
+  });
 
   const vertical = getVerticalConfig(client.vertical);
   const templateKey = templateKeyFor(client);
@@ -197,6 +216,20 @@ export default async function ClientEditPage({
             </p>
           )}
 
+          {settings ? (
+            <SearchAppearanceForm
+              clientId={client.id}
+              generated={generatedMeta}
+              initial={{
+                seoTitle: settings.seoTitle ?? "",
+                seoDescription: settings.seoDescription ?? "",
+                ga4MeasurementId: settings.ga4MeasurementId ?? "",
+                searchConsoleVerification: settings.searchConsoleVerification ?? "",
+              }}
+            />
+          ) : null}
+
+          <ReadinessPanel groups={readiness} />
           {settings ? (
             <BrandingPanel
               clientId={client.id}

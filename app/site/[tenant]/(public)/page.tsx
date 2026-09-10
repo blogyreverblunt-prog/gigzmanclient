@@ -39,18 +39,31 @@ import {
   getUpcomingCompliance,
   getPublishedUpdates,
   getCalculators,
+  getLocalities,
 } from "@/lib/content";
 import { SERVICE_CATEGORY_LABELS, formatDate } from "@/lib/format";
+import { resolveHomeMeta } from "@/lib/seo/generated";
 
 export async function generateMetadata(props: PageProps<"/site/[tenant]">) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);
   if (!tenant) return {};
   const settings = await getFirmSettings(tenant.id);
-  return {
-    title: settings?.seoTitle ?? settings?.firmName,
-    description: settings?.seoDescription ?? settings?.overview?.slice(0, 160),
-  };
+  if (!settings) return {};
+
+  // `seoTitle` / `seoDescription` are OVERRIDES since CD-06: null means
+  // "generate one", and the generated pair tracks the business name,
+  // category and locality the operator maintains anyway. Nothing writes the
+  // generated text back into the columns — that would freeze it.
+  const [localities, services] = await Promise.all([
+    getLocalities(tenant.id),
+    getServices(tenant.id),
+  ]);
+  const { title, description } = resolveHomeMeta(settings, tenant.vertical, {
+    localities: localities.map((l) => l.name),
+    serviceTitles: services.map((s) => s.title),
+  });
+  return { title, description };
 }
 
 const VALUE_PROPS = [
