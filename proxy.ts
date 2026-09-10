@@ -31,7 +31,12 @@ import { tenantSlugForHost } from "./lib/domains";
 
 const TENANT_MODE = process.env.TENANT_MODE === "host" ? "host" : "path";
 
-const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,118}[a-z0-9]$/;
+/**
+ * Exported so the create-client wizard validates against the same pattern this
+ * file routes with, rather than a second copy that could drift. A slug this
+ * rejects has no reachable URL: the branches below redirect it to `/`.
+ */
+export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,118}[a-z0-9]$/;
 
 
 

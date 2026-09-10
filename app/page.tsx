@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Search } from "lucide-react";
+import { LogOut, Plus, Search } from "lucide-react";
 import { requirePlatformAdmin } from "@/lib/platform-auth";
 import { listClientsForPlatform } from "@/lib/platform/clients";
 import { getVerticalConfig } from "@/lib/verticals";
@@ -58,15 +58,24 @@ export default async function Dashboard({
             <h1 className="display-md mt-2">Clients</h1>
             <p className="mt-2 text-[13px] text-ink-muted">{session.email}</p>
           </div>
-          <form action={logoutPlatformAdmin}>
-            <button
-              type="submit"
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] border border-line-strong px-3 text-[12.5px] font-medium text-ink-muted hover:border-navy hover:text-navy"
+          <div className="flex items-center gap-2">
+            <Link
+              href="/clients/new"
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] bg-navy px-3.5 text-[12.5px] font-medium text-white hover:bg-navy-soft"
             >
-              <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-              Sign out
-            </button>
-          </form>
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              New client
+            </Link>
+            <form action={logoutPlatformAdmin}>
+              <button
+                type="submit"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] border border-line-strong px-3 text-[12.5px] font-medium text-ink-muted hover:border-navy hover:text-navy"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
 
         <form method="get" className="mt-7 flex flex-wrap items-end gap-2">

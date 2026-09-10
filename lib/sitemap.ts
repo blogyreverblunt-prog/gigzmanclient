@@ -76,7 +76,18 @@ export async function sitemapClients(): Promise<Client[]> {
       .from(clients)
       .where(eq(clients.isActive, true))
       .orderBy(asc(clients.slug));
-    return TENANT_ONLY.length > 0 ? rows.filter((r) => TENANT_ONLY.includes(r.slug)) : rows;
+    // A realestate row whose `template_key` is null or unrecognised has no
+    // reachable URL — `getTenantBySlug` 404s it, and `getTenantPath` falls back
+    // to the two-segment `/realestate/<slug>` shape that `proxy.ts` bounces to
+    // `/`. Listing it would publish a sitemap full of URLs that redirect, which
+    // is an indexing liability rather than a cosmetic flaw.
+    //
+    // Unreachable while the template map was hardcoded in `lib/templates`;
+    // reachable since CD-01 moved the assignment onto the row, and routine now
+    // that CD-03b's wizard can leave a client half-configured mid-creation.
+    // Filtered here rather than in the callers so every family inherits it.
+    const routable = rows.filter((r) => r.vertical !== "realestate" || templateKeyFor(r) !== undefined);
+    return TENANT_ONLY.length > 0 ? routable.filter((r) => TENANT_ONLY.includes(r.slug)) : routable;
   } catch {
     return [];
   }

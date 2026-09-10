@@ -2,10 +2,22 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
+import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { clients, firmSettings, type OpeningHour } from "@/lib/db/schema";
+import { calculators, clients, firmSettings, users, type OpeningHour } from "@/lib/db/schema";
 import { requirePlatformAdmin } from "@/lib/platform-auth";
+import { isVerticalId, getVerticalConfig } from "@/lib/verticals";
+import { TEMPLATE_REGISTRY, getTenantPath } from "@/lib/templates";
+import { SLUG_PATTERN } from "@/proxy";
+import {
+  CALCULATOR_DEFINITIONS,
+  REALESTATE_CALCULATOR_DEFINITIONS,
+  RATES_VERSION,
+  REALESTATE_RATES_VERSION,
+  TAX_YEAR,
+} from "@/lib/calculators/registry";
 import { tenantDataTag, tenantSlugTag } from "@/lib/cache-tags";
 import { SITEMAP_FAMILIES } from "@/lib/sitemap";
 import { featureEnabled, type ClientFeatures } from "@/lib/features";
@@ -408,6 +420,190 @@ export async function updateClientFeatures(formData: FormData): Promise<ActionRe
     invalidateSitemaps();
 
     return { ok: true, message: "Feature flags saved." };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
+
+// ─────────────────────────────────────────────────────────── client creation
+
+/**
+ * Creating a client is the point of the whole programme: CD-01 moved the
+ * template assignment onto the row and CD-02 moved the feature flags, so that a
+ * new `clients` row is now sufficient to produce a working site. Before them
+ * this action was impossible — onboarding meant editing three source files and
+ * running `pnpm seed:client`.
+ *
+ * It deliberately does NOT shell out to that script. The script's job is to
+ * bootstrap a tenant from `clients/<slug>/*.yaml`; this one creates a tenant
+ * that has no YAML at all, and spawning a child process from a Server Action to
+ * write rows we can write directly would be indirection with a worse failure
+ * mode.
+ */
+export interface CreateClientResult extends ActionResult {
+  /**
+   * Present only on the single successful response that created the row. The
+   * generated password is never stored in plaintext and never re-read, so this
+   * is the one moment it can be shown — which is why this action returns it
+   * instead of redirecting. A redirect would have to carry it in a query string,
+   * putting a live credential into browser history, the referer header and every
+   * access log between here and the operator.
+   */
+  created?: { slug: string; sitePath: string; adminEmail: string; password: string };
+}
+
+/** Static segments under `/clients/` that a slug would shadow in the router. */
+const RESERVED_SLUGS = new Set(["new", "login", "site", "api", "sitemaps"]);
+
+export async function createClient(formData: FormData): Promise<CreateClientResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
+    const displayName = String(formData.get("displayName") ?? "").trim();
+    const vertical = String(formData.get("vertical") ?? "").trim();
+    const templateKeyRaw = String(formData.get("templateKey") ?? "").trim();
+
+    if (!displayName) return { ok: false, message: "Business name is required." };
+
+    // The same pattern `proxy.ts` routes with, imported rather than re-typed:
+    // a slug it rejects has no reachable URL at all.
+    if (!SLUG_PATTERN.test(slug)) {
+      return {
+        ok: false,
+        message:
+          "Client ID must be lowercase letters, numbers and hyphens, start and end with a letter or number, and be at least two characters.",
+      };
+    }
+    if (RESERVED_SLUGS.has(slug)) {
+      // `/clients/new` is a real page; a client with that slug would be
+      // unreachable from the list because Next resolves the static segment first.
+      return { ok: false, message: `"${slug}" is reserved and cannot be used as a client ID.` };
+    }
+
+    if (!isVerticalId(vertical)) {
+      return { ok: false, message: "Choose an industry." };
+    }
+
+    // A realestate row without a template the code can render 404s every page of
+    // its site (`getTenantBySlug`), and nothing on the resulting screen would say
+    // why. Refused at creation rather than left for the operator to discover.
+    let templateKey: string | null = null;
+    if (vertical === "realestate") {
+      if (!templateKeyRaw || !Object.hasOwn(TEMPLATE_REGISTRY, templateKeyRaw)) {
+        return {
+          ok: false,
+          message: `A real-estate client needs a template. Valid options: ${Object.keys(TEMPLATE_REGISTRY).join(", ")}.`,
+        };
+      }
+      templateKey = templateKeyRaw;
+    }
+
+    const [existing] = await db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(eq(clients.slug, slug))
+      .limit(1);
+    if (existing) {
+      return { ok: false, message: `A client with the ID "${slug}" already exists.` };
+    }
+
+    const config = getVerticalConfig(vertical);
+    const adminEmail = `admin@${slug}.local`;
+    // Same shape as `scripts/seed-client.ts` so a wizard-created client and a
+    // seeded one are indistinguishable afterwards.
+    const password = randomBytes(9).toString("base64url");
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const calculatorDefs =
+      vertical === "cafirm"
+        ? CALCULATOR_DEFINITIONS
+        : vertical === "realestate"
+          ? REALESTATE_CALCULATOR_DEFINITIONS
+          : [];
+    const calculatorVersion = vertical === "cafirm" ? RATES_VERSION : REALESTATE_RATES_VERSION;
+    const calculatorTaxYear = vertical === "cafirm" ? TAX_YEAR : null;
+
+    // One transaction: a client row with no `firm_settings` renders a site with
+    // no name, phone or address, and a client with no admin user cannot be
+    // handed over. A partial create is worse than no create, because the slug is
+    // then taken and the operator cannot retry with it.
+    const created = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(clients)
+        .values({
+          slug,
+          vertical,
+          displayName,
+          templateKey,
+          customDomain: null,
+          isActive: true,
+          isDemo: false,
+          // `{}` means "every documented default" — see lib/features.ts. For a
+          // new client that is map on, and the three branded, regulated or
+          // build-expensive families off, which is the right starting point.
+          features: {},
+        })
+        .returning();
+
+      await tx.insert(firmSettings).values({
+        clientId: row.id,
+        firmName: displayName,
+        // Every other field stays NULL on purpose. AGENTS.md: never invent
+        // client facts — an empty field renders nothing, an invented one ships a
+        // lie on a real business's website. The operator fills them in from the
+        // edit screen, or CD-04 pulls them from the Google Business Profile.
+        //
+        // `reviewsEnabled` comes from the vertical's defaults, which is what
+        // keeps it false for a cafirm tenant: ICAI prohibits testimonials,
+        // ratings and endorsements on a practice's own site.
+        reviewsEnabled: config.defaults.reviewsEnabled,
+      });
+
+      for (const def of calculatorDefs) {
+        await tx.insert(calculators).values({
+          clientId: row.id,
+          key: def.key,
+          title: def.title,
+          description: def.description,
+          version: calculatorVersion,
+          taxYear: calculatorTaxYear,
+          disclaimer: def.disclaimer,
+          sourceNote: def.sourceNote,
+          sortOrder: def.sortOrder,
+        });
+      }
+
+      await tx.insert(users).values({
+        clientId: row.id,
+        email: adminEmail,
+        passwordHash,
+        name: "Administrator",
+        role: "admin",
+      });
+
+      return row;
+    });
+
+    // The new row changes what `/` lists and what every sitemap contains. Its
+    // own tenant tags have nothing cached against them yet, but invalidating
+    // them costs nothing and means a slug reused after a deletion cannot serve a
+    // predecessor's cached rows.
+    invalidateTenant(created);
+    invalidateSitemaps();
+    revalidatePath("/");
+
+    return {
+      ok: true,
+      message: `Created ${displayName}.`,
+      created: {
+        slug: created.slug,
+        sitePath: getTenantPath(created),
+        adminEmail,
+        password,
+      },
+    };
   } catch (error) {
     unstable_rethrow(error);
     return fail(error);
