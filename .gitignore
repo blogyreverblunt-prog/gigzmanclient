@@ -48,3 +48,6 @@ next-env.d.ts
 
 # macOS junk
 .DS_Store
+
+# Throwaway upload fixtures for manual testing
+/.test-assets/
