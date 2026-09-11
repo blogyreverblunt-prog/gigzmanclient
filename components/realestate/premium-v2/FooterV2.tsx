@@ -111,26 +111,30 @@ export default function FooterV2({ settings, basePath, homeLoanEnabled }: Footer
                 Premium Gurugram property discovery, market intelligence and local advisory.
               </p>
 
-              {/* Real handles pending from the client — links fall back to
-                  the contact page rather than a fabricated external URL or
-                  a dead `#` link. */}
-              <div className="mt-5 flex items-center gap-2.5">
-                {SOCIAL_PLATFORMS.map((platform) => {
-                  const href = socialLinks[platform.key] || p("/contact");
-                  return (
-                    <a
-                      key={platform.key}
-                      href={href}
-                      target={socialLinks[platform.key] ? "_blank" : undefined}
-                      rel={socialLinks[platform.key] ? "noopener noreferrer" : undefined}
-                      aria-label={platform.label}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white transition-colors hover:border-white hover:bg-white/10"
-                    >
-                      <SocialIconV2 platform={platform.key} className="h-4 w-4" />
-                    </a>
-                  );
-                })}
-              </div>
+              {/* Only handles the client actually gave us. Every icon used to
+                  render whether or not a URL existed, with the empty ones
+                  pointing at /contact — so a visitor clicking "Instagram" landed
+                  on a contact form, and four icons implied four accounts the
+                  firm may not have. An icon here is now a promise that the link
+                  goes where it says. Nothing is hardcoded; empty stays absent. */}
+              {SOCIAL_PLATFORMS.some((platform) => socialLinks[platform.key]?.trim()) ? (
+                <div className="mt-5 flex items-center gap-2.5">
+                  {SOCIAL_PLATFORMS.filter((platform) => socialLinks[platform.key]?.trim()).map(
+                    (platform) => (
+                      <a
+                        key={platform.key}
+                        href={socialLinks[platform.key].trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={platform.label}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white transition-colors hover:border-white hover:bg-white/10"
+                      >
+                        <SocialIconV2 platform={platform.key} className="h-4 w-4" />
+                      </a>
+                    ),
+                  )}
+                </div>
+              ) : null}
             </div>
 
             <FooterColumn title="Quick Links" links={quickLinks} />

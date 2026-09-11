@@ -369,6 +369,121 @@ export async function updateClientBusinessDetails(formData: FormData): Promise<A
   }
 }
 
+// ────────────────────────────────── the one client form (create and edit)
+
+/**
+ * Every field the single client form writes, as a `firm_settings` patch.
+ *
+ * Shared by creation and editing so the two cannot drift — a field the create
+ * form collects but the edit form silently drops is exactly the bug this
+ * consolidation exists to remove.
+ *
+ * What is deliberately ABSENT matters as much as what is here:
+ *
+ *  - `reviewsEnabled`, `pricingEnabled`, `awardsEnabled`, `clientLogosEnabled`
+ *    and `teamEnabled` are untouched. The lean form does not render them, and
+ *    `checked()` reads a missing checkbox as `false` — so including them would
+ *    switch every one of them OFF on the first save through this form.
+ *  - `openingHours` likewise: the form does not collect it, so writing the
+ *    parsed-empty value would wipe hours the Google autofill had accepted.
+ *
+ * Empty stays NULL throughout (`text()`), never an invented placeholder.
+ */
+function businessPatchFrom(formData: FormData, existingSocial: Record<string, string> | null) {
+  return {
+    tagline: text(formData, "tagline"),
+    overview: text(formData, "overview"),
+    establishedYear: text(formData, "establishedYear"),
+    firmRegistrationNumber: text(formData, "firmRegistrationNumber"),
+    businessCategory: text(formData, "businessCategory"),
+    phone: text(formData, "phone"),
+    whatsapp: text(formData, "whatsapp"),
+    email: text(formData, "email"),
+    notificationEmail: text(formData, "notificationEmail"),
+    addressLine: text(formData, "addressLine"),
+    locality: text(formData, "locality"),
+    region: text(formData, "region"),
+    postalCode: text(formData, "postalCode"),
+    country: text(formData, "country"),
+    latitude: text(formData, "latitude"),
+    longitude: text(formData, "longitude"),
+    googleMapsUrl: text(formData, "googleMapsUrl"),
+    socialLinks: mergeSocialLinks(existingSocial, formData),
+  };
+}
+
+/**
+ * Save an existing client from the single form: name, business details, social
+ * links and — if one was chosen — a new logo, in one press.
+ *
+ * The multi-panel edit screen split this across four actions so a refusal in
+ * one did not discard the others. With one form there is one save, so ordering
+ * is the safeguard instead: everything is validated before anything is written,
+ * and the logo — the only step that can fail on its own merits — runs last,
+ * after the text is safely stored.
+ */
+export async function saveClientDetails(formData: FormData): Promise<ActionResult> {
+  try {
+    await requirePlatformAdmin("/");
+
+    const row = await loadClientRow(String(formData.get("clientId") ?? ""));
+    if (!row) return { ok: false, message: "Client not found." };
+
+    const firmName = String(formData.get("firmName") ?? "").trim();
+    if (!firmName) return { ok: false, message: "The business name is required." };
+
+    const latitude = text(formData, "latitude");
+    const longitude = text(formData, "longitude");
+    if (!coordinatesValid(latitude, longitude)) {
+      return {
+        ok: false,
+        message: "Latitude and longitude must both be decimal numbers, or both be empty.",
+      };
+    }
+
+    const [existing] = await db
+      .select()
+      .from(firmSettings)
+      .where(eq(firmSettings.clientId, row.id))
+      .limit(1);
+    if (!existing) return { ok: false, message: "This client has no settings row yet." };
+
+    await db
+      .update(firmSettings)
+      .set({
+        firmName,
+        ...businessPatchFrom(formData, existing.socialLinks),
+        updatedAt: new Date(),
+      })
+      .where(eq(firmSettings.clientId, row.id));
+
+    // The name in the platform's own client list lives on `clients`, and an
+    // operator correcting a name expects both to change.
+    await db.update(clients).set({ displayName: firmName }).where(eq(clients.id, row.id));
+
+    // Last, and non-fatal to the save above: a refused logo returns its own
+    // message, but the details just typed are already stored.
+    const file = formData.get("logo");
+    let logoNote = "";
+    if (file instanceof File && file.size > 0) {
+      const logo = await storeClientLogo(row.id, file);
+      if (!logo.ok) {
+        invalidateTenant(row);
+        return { ok: false, message: `Details saved, but the logo was not: ${logo.message}` };
+      }
+      logoNote = " Logo updated.";
+    }
+
+    invalidateTenant(row);
+    revalidatePath("/");
+    return { ok: true, message: `Saved.${logoNote}` };
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
+
+
 // ─────────────────────────────────────────────────────────── feature flags
 
 export async function updateClientFeatures(formData: FormData): Promise<ActionResult> {
@@ -479,7 +594,13 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
     await requirePlatformAdmin("/");
 
     const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
-    const displayName = String(formData.get("displayName") ?? "").trim();
+    // `firmName` is what the one client form posts, in both modes, because that
+    // is the column it writes on `firm_settings`. `displayName` is the name the
+    // create wizard used before the two screens were merged — kept as a fallback
+    // so a caller posting the old field name is not silently told the business
+    // name is missing when it is right there on screen.
+    const displayName =
+      String(formData.get("firmName") ?? formData.get("displayName") ?? "").trim();
     const vertical = String(formData.get("vertical") ?? "").trim();
     const templateKeyRaw = String(formData.get("templateKey") ?? "").trim();
 
@@ -516,6 +637,17 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
         };
       }
       templateKey = templateKeyRaw;
+    }
+
+    // The one form collects the business details at creation too, so the
+    // validation `updateClientBusinessDetails` applies has to run on this path
+    // as well — otherwise a bad pair typed into the create form reaches `geo` in
+    // the organisation JSON-LD and the map, and only fails on a later edit.
+    if (!coordinatesValid(text(formData, "latitude"), text(formData, "longitude"))) {
+      return {
+        ok: false,
+        message: "Latitude and longitude must both be decimal numbers, or both be empty.",
+      };
     }
 
     const [existing] = await db
@@ -568,10 +700,12 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
       await tx.insert(firmSettings).values({
         clientId: row.id,
         firmName: displayName,
-        // Every other field stays NULL on purpose. AGENTS.md: never invent
-        // client facts — an empty field renders nothing, an invented one ships a
-        // lie on a real business's website. The operator fills them in from the
-        // edit screen, or CD-04 pulls them from the Google Business Profile.
+        // Whatever the operator filled in on the one form — by hand or accepted
+        // from the Google Business Profile lookup — lands here at creation.
+        // Anything they left blank is NULL, not a placeholder. AGENTS.md: never
+        // invent client facts; an empty field renders nothing, an invented one
+        // ships a lie on a real business's website.
+        ...businessPatchFrom(formData, null),
         //
         // `reviewsEnabled` comes from the vertical's defaults, which is what
         // keeps it false for a cafirm tenant: ICAI prohibits testimonials,
@@ -604,6 +738,19 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
       return row;
     });
 
+    // Outside the transaction on purpose. Image processing and object storage
+    // are slow and can fail on the file's own merits; holding a database
+    // transaction open across them would risk a lock timeout taking the whole
+    // create down over a logo. The client exists and is usable without one, so
+    // a refusal here is reported alongside a successful create rather than
+    // undoing it.
+    const logoFile = formData.get("logo");
+    let logoNote = "";
+    if (logoFile instanceof File && logoFile.size > 0) {
+      const logo = await storeClientLogo(created.id, logoFile);
+      logoNote = logo.ok ? " Logo uploaded." : ` The logo was not saved: ${logo.message}`;
+    }
+
     // The new row changes what `/` lists and what every sitemap contains. Its
     // own tenant tags have nothing cached against them yet, but invalidating
     // them costs nothing and means a slug reused after a deletion cannot serve a
@@ -614,7 +761,7 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
 
     return {
       ok: true,
-      message: `Created ${displayName}.`,
+      message: `Created ${displayName}.${logoNote}`,
       created: {
         slug: created.slug,
         sitePath: getTenantPath(created),
@@ -642,6 +789,31 @@ export async function createClient(formData: FormData): Promise<CreateClientResu
  * The share card stays overridable separately (`ogImageUrl` is editable in its
  * own right) for the client who has had one designed, but nobody has to.
  */
+/**
+ * Turn one uploaded file into this client's whole brand asset set and store it.
+ *
+ * Extracted from `uploadClientBranding` so the single client form can do the
+ * same work at creation, when there is no client row to upload against yet and
+ * so no second round trip the operator would have to know to make. The action
+ * below is now a thin wrapper; this is the implementation both paths share.
+ *
+ * Returns a message on refusal rather than throwing: a logo the operator needs
+ * to re-cut must not discard the rest of a form they have just filled in.
+ */
+async function storeClientLogo(clientId: string, file: File): Promise<ActionResult> {
+  if (file.size > MAX_LOGO_BYTES) {
+    return { ok: false, message: "The logo must be 5MB or smaller." };
+  }
+  // Validated server-side against the actual declared type, not the `accept`
+  // attribute — that is a hint to the file picker, not a constraint on a POST.
+  if (!Object.hasOwn(ACCEPTED_LOGO_TYPES, file.type)) {
+    return { ok: false, message: "Upload a PNG, JPEG, WebP or SVG file." };
+  }
+
+  const source = Buffer.from(await file.arrayBuffer());
+  return storeLogoBuffer(clientId, source);
+}
+
 export async function uploadClientBranding(formData: FormData): Promise<ActionResult> {
   try {
     await requirePlatformAdmin("/");
@@ -653,17 +825,23 @@ export async function uploadClientBranding(formData: FormData): Promise<ActionRe
     if (!(file instanceof File) || file.size === 0) {
       return { ok: false, message: "Choose a logo file to upload." };
     }
-    if (file.size > MAX_LOGO_BYTES) {
-      return { ok: false, message: "The logo must be 5MB or smaller." };
-    }
-    // Validated server-side against the actual declared type, not the `accept`
-    // attribute — that is a hint to the file picker, not a constraint on a POST.
-    if (!Object.hasOwn(ACCEPTED_LOGO_TYPES, file.type)) {
-      return { ok: false, message: "Upload a PNG, JPEG, WebP or SVG file." };
-    }
 
-    const source = Buffer.from(await file.arrayBuffer());
+    const result = await storeClientLogo(row.id, file);
+    if (result.ok) invalidateTenant(row);
+    return result;
+  } catch (error) {
+    unstable_rethrow(error);
+    return fail(error);
+  }
+}
 
+/**
+ * Cache invalidation is the CALLER's job here, not this helper's: creation
+ * invalidates once at the end of the whole save, and doing it twice would
+ * expire the tenant's tags before the rest of the details had been written.
+ */
+async function storeLogoBuffer(clientId: string, source: Buffer): Promise<ActionResult> {
+  try {
     let logo: Awaited<ReturnType<typeof normaliseLogo>>;
     let icons: Awaited<ReturnType<typeof buildIconSet>>;
     let ogImage: Buffer;
@@ -685,7 +863,7 @@ export async function uploadClientBranding(formData: FormData): Promise<ActionRe
     // cached copy of its predecessor. Browsers and CDNs cache favicons hard, and
     // reusing `logo.png` would leave the old mark on screen indefinitely.
     const stem = randomBytes(8).toString("hex");
-    const base = `${row.id}/brand/${stem}`;
+    const base = `${clientId}/brand/${stem}`;
 
     const [logoUrl] = await Promise.all([
       putObject(`${base}-logo.png`, logo.png, "image/png"),
@@ -704,13 +882,13 @@ export async function uploadClientBranding(formData: FormData): Promise<ActionRe
     const [previous] = await db
       .select({ logoUrl: firmSettings.logoUrl, iconBaseUrl: firmSettings.iconBaseUrl })
       .from(firmSettings)
-      .where(eq(firmSettings.clientId, row.id))
+      .where(eq(firmSettings.clientId, clientId))
       .limit(1);
 
     await db
       .update(firmSettings)
       .set({ logoUrl, iconBaseUrl, ogImageUrl, updatedAt: new Date() })
-      .where(eq(firmSettings.clientId, row.id));
+      .where(eq(firmSettings.clientId, clientId));
 
     // Only the previous UPLOADED logo is cleaned up. The five existing clients
     // point at committed files under public/verticals/, which are part of the
@@ -719,8 +897,6 @@ export async function uploadClientBranding(formData: FormData): Promise<ActionRe
     if (previous?.logoUrl && previous.logoUrl !== logoUrl) {
       await deleteObject(previous.logoUrl);
     }
-
-    invalidateTenant(row);
 
     return {
       ok: true,
