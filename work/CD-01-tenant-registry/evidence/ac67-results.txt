@@ -1,7 +1,0 @@
-### AC6/AC7 cycles — urban-flat-real-estate
-update clients set template_key = null where slug = 'urban-flat-real-estate'; home=404  core.xml-hits=20  row=[| t]
-update clients set template_key = 'premium-v3' where slug = 'urban-flat-real-estate'; home=404  core.xml-hits=20  row=[premium-v3 | t]
-update clients set template_key = 'premium-v2' where slug = 'urban-flat-real-estate'; home=200  core.xml-hits=20  row=[premium-v2 | t]
-update clients set is_active = false where slug = 'urban-flat-real-estate'; home=404  core.xml-hits=0  row=[premium-v2 | f]
-update clients set is_active = true where slug = 'urban-flat-real-estate'; home=200  core.xml-hits=20  row=[premium-v2 | t]
-### done

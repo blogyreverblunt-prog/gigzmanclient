@@ -1,7 +1,0 @@
-[
- {
-  "firm_name": "Urban Flat Real Estate",
-  "phone": "097114 41113",
-  "updated_at": "2026-09-10T07:19:27.320Z"
- }
-]

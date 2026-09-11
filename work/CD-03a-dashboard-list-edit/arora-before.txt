@@ -1,7 +1,0 @@
-[
- {
-  "firm_name": "Arora K & Associates",
-  "reviews_enabled": false,
-  "updated_at": "2026-09-10T07:19:29.325Z"
- }
-]

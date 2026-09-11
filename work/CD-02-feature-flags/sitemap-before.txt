@@ -1,6 +1,0 @@
-core         120
-properties   1300
-register     308
-localities   56
-updates      18
-services     20

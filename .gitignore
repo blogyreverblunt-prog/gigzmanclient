@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,6 +13,11 @@
 
 # testing
 /coverage
+/.nyc_output/
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.auth/
 
 # next.js
 /.next/
@@ -19,19 +25,34 @@
 
 # production
 /build
+/dist/
+
+# local tool caches
+/.cache/
+/.turbo/
+.eslintcache
+.stylelintcache
 
 # misc
 .DS_Store
+._*
+Thumbs.db
+Desktop.ini
 *.pem
+*.key
+*.p12
+*.pfx
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Local environment files; keep the shared setup template versioned
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -40,14 +61,29 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Committed template — real secrets live in .env.local (ignored above)
-!.env.example
-
 # Dry-run screenshot output
 /screenshots/
 
-# macOS junk
-.DS_Store
+# Local editor state; allow shared VS Code project configuration
+/.idea/
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/settings.json
+!/.vscode/tasks.json
+!/.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# Machine-specific assistant settings
+/.claude/settings.local.json
+
+# Temporary files and scratch work
+/tmp/
+/temp/
+*.tmp
+*.temp
+/work/
 
 # Throwaway upload fixtures for manual testing
 /.test-assets/
