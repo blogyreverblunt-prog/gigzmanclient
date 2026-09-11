@@ -6,7 +6,54 @@ const nextConfig: NextConfig = {
   // function's bundle, so it has to be named explicitly or the card renders
   // without its photograph.
   outputFileTracingIncludes: {
-    "/site/[tenant]/(public)/opengraph-image": ["./public/brand/og-hero.jpg"],
+    // Both files this route reads off disk. `readPublicFile` takes a runtime
+    // path, so the tracer cannot see either one — and the excludes below now
+    // strip public/ from every trace, so they have to be named here.
+    "/site/[tenant]/(public)/opengraph-image": [
+      "./public/brand/og-hero.jpg",
+      "./public/verticals/*/templates/*/brand/**",
+    ],
+  },
+
+  /**
+   * Keep public/ out of every function bundle.
+   *
+   * opengraph-image.tsx calls `readFile(path.join(process.cwd(), "public", clean))`
+   * with `clean` computed at runtime. Next’s tracer cannot resolve that, so it
+   * conservatively traced the whole of public/ — 280MB — and because the route
+   * sits in the (public) group, that trace landed on every route beneath the
+   * layout. Measured: 51 of 61 routes traced 287MB each, of which 280MB was
+   * images the CDN already serves.
+   *
+   * The cost was not size but function count. Vercel bundles Next routes into
+   * as few Lambdas as it can, splitting only when a bundle exceeds its limit —
+   * at 287MB apiece nothing could share, so every route became its own
+   * function: 56 against the 12 a Hobby deployment allows, failing at
+   * patchBuild with exceeded_serverless_functions_per_deployment.
+   *
+   * Static assets are served from the CDN and are never read from inside a
+   * function, with the single exception re-included above.
+   */
+  outputFileTracingExcludes: {
+    // Excludes beat includes: a blanket "./public/**" here also stripped the
+    // files named in outputFileTracingIncludes above, and the share card lost
+    // its background and every tenant logo. So exclude the heavy trees by name
+    // and leave brand/ traced — it is 4.8MB against the 280MB below.
+    //
+    // If function count ever creeps back up, check this list first: a new
+    // asset directory under public/ will not be excluded automatically.
+    "**": [
+      "./public/verticals/*/clients/**",
+      "./public/verticals/*/templates/*/images/**",
+      "./public/verticals/*/templates/*/maps/**",
+      "./public/verticals/*/templates/*/farmhouses/**",
+      "./public/verticals/*/templates/*/people/**",
+      "./public/verticals/*/templates/*/backgrounds/**",
+      "./public/verticals/*/templates/*/property-management/**",
+      "./public/verticals/*/templates/*/property-management-page/**",
+      "./public/3d/**",
+      "./public/uploads/**",
+    ],
   },
   images: {
     /**
