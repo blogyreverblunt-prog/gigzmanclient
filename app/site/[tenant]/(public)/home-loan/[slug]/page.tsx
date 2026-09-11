@@ -20,6 +20,9 @@ import {
  * lender name further from the start of the URL.
  */
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 /**
  * Prerenders every amount and lender page. Returns the FULL param set
  * including `tenant` — see lib/static-params.ts for why the parent's params

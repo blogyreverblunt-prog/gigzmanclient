@@ -1,6 +1,16 @@
 import { activeTenants } from "@/lib/static-params";
 
 /**
+ * An unrecognised tenant slug is a 404, not an on-demand render.
+ *
+ * This covers the whole subtree, so the pages with no dynamic segment of their
+ * own — /faq, /contact, /careers — become static HTML rather than each keeping
+ * a server function alive for tenant slugs that do not exist. `lib/tenant.ts`
+ * already refused those at runtime; this refuses them at the routing layer.
+ */
+export const dynamicParams = false;
+
+/**
  * Owns `generateStaticParams` for the `[tenant]` segment.
  *
  * This deliberately sits here rather than inside the `(public)` route group.

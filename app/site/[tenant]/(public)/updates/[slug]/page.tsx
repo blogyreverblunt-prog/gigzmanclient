@@ -14,6 +14,9 @@ import { getFirmSettings, getUpdate, getPublishedUpdates } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { buildArticleJsonLd, buildBreadcrumbJsonLd, jsonLdProps } from "@/lib/schema-org";
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 /** Prerenders every published market update for each tenant. */
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {

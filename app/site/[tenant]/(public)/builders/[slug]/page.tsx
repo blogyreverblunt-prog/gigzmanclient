@@ -24,6 +24,9 @@ async function resolveDeveloper(tenantId: string, slug: string) {
   return rows.find((r) => r.developer && developerSlug(r.developer) === slug.toLowerCase())?.developer ?? null;
 }
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     if (templateKeyFor(tenant) !== "premium-v2") return [];

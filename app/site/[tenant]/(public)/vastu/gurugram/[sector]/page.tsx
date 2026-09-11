@@ -18,6 +18,9 @@ import { GpContainer, GpEyebrow, GpSection } from "@/components/realestate/premi
 import LineArtBackdropV2 from "@/components/realestate/premium-v2/LineArtBackdropV2";
 import RelatedCardsV2 from "@/components/realestate/premium-v2/RelatedCardsV2";
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     const t = await getTenantBySlug(tenant.slug);

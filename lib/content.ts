@@ -204,6 +204,18 @@ export const getUpdate = cache(async (clientId: string, slug: string) => {
   return row ?? null;
 });
 
+/**
+ * Slugs only, for `generateStaticParams`. Deliberately not `getLegalPage` in a
+ * loop: prerendering needs every slug a tenant has and none of the bodies,
+ * which are the large column on this table.
+ */
+export const getLegalPageSlugs = cache(async (clientId: string) =>
+  db
+    .select({ slug: legalPages.slug })
+    .from(legalPages)
+    .where(eq(legalPages.clientId, clientId)),
+);
+
 export const getLegalPage = cache(async (clientId: string, slug: string) => {
   const [row] = await db
     .select()

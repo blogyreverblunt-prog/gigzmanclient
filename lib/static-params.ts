@@ -61,6 +61,28 @@ export type StaticParamTenant = {
   features: ClientFeatures;
 };
 
+/**
+ * Why the routes using these helpers also set `export const dynamicParams =
+ * false`.
+ *
+ * Left at the default (`true`), a param absent from `generateStaticParams` is
+ * rendered on demand, which means every one of these routes needs a server
+ * function standing by for slugs that, in this app, can only be typos — the
+ * param sets here are enumerated from the database, so anything missing from
+ * them does not exist. `false` makes that a 404 and lets the route ship as
+ * plain static HTML.
+ *
+ * The cost is real and worth stating: content added through a client dashboard
+ * gets no page until the next build. That is a deliberate trade for a site
+ * whose inventory changes in batches, not continuously — but it is the reason
+ * a publish flow needs to trigger a rebuild.
+ *
+ * Note this interacts with the empty-array fallback below: if the database is
+ * unreachable at build time, these routes prerender nothing AND refuse to
+ * render on demand, so the pages 404 rather than merely being slow. A build
+ * that cannot reach the database must not be deployed.
+ */
+
 export async function activeTenants(): Promise<StaticParamTenant[]> {
   try {
     const rows = await db

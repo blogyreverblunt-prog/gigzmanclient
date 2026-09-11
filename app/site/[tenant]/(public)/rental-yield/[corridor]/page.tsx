@@ -11,6 +11,9 @@ import RentalYieldCalculatorV2 from "@/components/realestate/premium-v2/tools/Re
 import LoanFaqV2 from "@/components/realestate/premium-v2/home-loan/LoanFaqV2";
 import { GpContainer, GpEyebrow, GpSection } from "@/components/realestate/premium-v2/gp-primitives";
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     const rows = await getLocalities(tenant.id);

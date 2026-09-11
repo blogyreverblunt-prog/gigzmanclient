@@ -22,6 +22,9 @@ import RelatedCardsV2 from "@/components/realestate/premium-v2/RelatedCardsV2";
 
 const BLUR = blurPlaceholders as Record<string, string>;
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     const t = await getTenantBySlug(tenant.slug);

@@ -25,6 +25,27 @@ const nextConfig: NextConfig = {
      */
     qualities: [68, 70, 75],
 
+    /**
+     * Uploaded logos and property photos are the only remote images this app
+     * renders. With BLOB_READ_WRITE_TOKEN set, `putObject` in lib/storage.ts
+     * returns an absolute Vercel Blob URL, and that value goes straight into
+     * next/image (PropertyCardV2, the dashboard managers). An undeclared
+     * hostname is not a silent fallback like `qualities` above — next/image
+     * throws, so the first production upload would break the very page it was
+     * uploaded for.
+     *
+     * The wildcard is load-bearing: uploads PUT to blob.vercel-storage.com but
+     * are served from a per-store subdomain that is not known until the store
+     * exists. Rejected: pinning one literal host, which would mean editing
+     * config again for every new Blob store.
+     *
+     * Development is unaffected — the local backend returns a relative
+     * /uploads/ path, which next/image treats as same-origin.
+     */
+    remotePatterns: [
+      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
+    ],
+
     // Only ever true for static, locally-bundled SVGs we sourced ourselves
     // (developer partner logos) — never for user-supplied or remote SVGs.
     // Next's own recommended-safe combination: sandboxed + no inline scripts.

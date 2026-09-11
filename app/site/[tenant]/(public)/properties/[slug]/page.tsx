@@ -24,6 +24,9 @@ import {
   jsonLdProps,
 } from "@/lib/schema-org";
 
+/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
+export const dynamicParams = false;
+
 /** Prerenders every active listing for each tenant. */
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
