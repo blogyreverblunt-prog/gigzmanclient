@@ -17,18 +17,6 @@ import {
   jsonLdProps,
 } from "@/lib/schema-org";
 
-/**
- * The location pages are a fixed list in lib/locations.ts rather than database
- * rows, so the set is identical for every tenant. It still has to be crossed
- * with the tenant list: `generateStaticParams` on a nested dynamic route must
- * return the complete param set including the ancestor’s `tenant`, or nothing
- * prerenders at all.
- *
- * `dynamicParams = false` makes any other path under this catch-all a 404,
- * which is what `findLocation` already did at runtime.
- */
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return paramsForEachTenant(async () =>
     LOCATION_PAGES.map((page) => ({ location: page.slug })),

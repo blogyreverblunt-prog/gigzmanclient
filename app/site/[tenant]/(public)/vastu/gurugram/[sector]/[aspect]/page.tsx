@@ -24,9 +24,6 @@ const DIRECTION_SLUGS = DIRECTIONS.map((d) => d.slug);
 const ROOM_SLUGS = ROOMS.map((r) => r.slug);
 const ASPECTS = sectorAspectSlugs(DIRECTION_SLUGS, ROOM_SLUGS);
 
-/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     const t = await getTenantBySlug(tenant.slug);

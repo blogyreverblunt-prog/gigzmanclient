@@ -11,9 +11,6 @@ import { AmountLoanPage } from "@/components/realestate/premium-v2/home-loan/Loa
 
 /** `/home-loan/{lender}/{amount}` — the lender × amount matrix. */
 
-/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
-export const dynamicParams = false;
-
 /** Prerenders the full lender x amount matrix for DSA-enabled tenants. */
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {

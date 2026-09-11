@@ -10,6 +10,17 @@ import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getPublishedUpdates } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 
+/**
+ * Rendered per request: ?category= filters the update list, and `searchParams`
+ * is a dynamic API. The parent layout sets `revalidate = 300`, so without
+ * this the page throws DYNAMIC_SERVER_USAGE and 500s for every tenant.
+ *
+ * The sibling /properties route solves the same problem the other way —
+ * `force-static` plus reading the query string client-side. That is the
+ * better trade for a page under real traffic; this one is not.
+ */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(props: PageProps<"/site/[tenant]/updates">) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);

@@ -10,6 +10,17 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+/**
+ * Rendered per request: ?ref= shows the submitted enquiry reference, and `searchParams`
+ * is a dynamic API. The parent layout sets `revalidate = 300`, so without
+ * this the page throws DYNAMIC_SERVER_USAGE and 500s for every tenant.
+ *
+ * The sibling /properties route solves the same problem the other way —
+ * `force-static` plus reading the query string client-side. That is the
+ * better trade for a page under real traffic; this one is not.
+ */
+export const dynamic = "force-dynamic";
+
 export default async function ThankYouPage(props: PageProps<"/site/[tenant]/thank-you">) {
   const searchParams = await props.searchParams;
   const reference = typeof searchParams.ref === "string" ? searchParams.ref : null;

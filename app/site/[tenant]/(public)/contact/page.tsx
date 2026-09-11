@@ -9,6 +9,23 @@ import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { templateKeyFor } from "@/lib/templates";
 import { getFirmSettings, getServices } from "@/lib/content";
 
+/**
+ * Rendered per request, unlike the rest of the public tree.
+ *
+ * This page reads `?service=` to preselect a service in the enquiry form, and
+ * `searchParams` is a dynamic API. The parent layout sets `revalidate = 300`,
+ * which opts this subtree into cached rendering — reading a dynamic API inside
+ * it throws DYNAMIC_SERVER_USAGE and the page 500s for every tenant. It went
+ * unnoticed because no build ever completed far enough to serve this route.
+ *
+ * Opting just this page out is the narrow fix: the enquiry form must be fresh
+ * anyway, and a contact page is not the traffic that caching exists for.
+ * Rejected: moving the query-string read into the client component, which
+ * keeps the cache but splits form state across the server/client boundary for
+ * a page that does not need it.
+ */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(props: PageProps<"/site/[tenant]/contact">) {
   const { tenant: tenantSlug } = await props.params;
   const tenant = await getTenantBySlug(tenantSlug);

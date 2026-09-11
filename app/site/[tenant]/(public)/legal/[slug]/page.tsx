@@ -8,16 +8,6 @@ import { paramsForEachTenant } from "@/lib/static-params";
 import { getFirmSettings, getLegalPage, getLegalPageSlugs } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 
-/**
- * Every legal page a tenant has, prerendered.
- *
- * `dynamicParams = false` turns an unknown slug into a 404 instead of an
- * on-demand render. That is the honest behaviour — a legal page absent from
- * the database does not exist — and it is what lets this route ship as static
- * HTML with no server function behind it.
- */
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {
     const rows = await getLegalPageSlugs(tenant.id);

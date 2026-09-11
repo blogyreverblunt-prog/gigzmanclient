@@ -14,9 +14,6 @@ import {
   RelatedConversionsV2,
 } from "@/components/realestate/premium-v2/tools/ToolSections";
 
-/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
-export const dynamicParams = false;
-
 /** Every ordered unit pair, for every real-estate tenant. */
 export async function generateStaticParams() {
   return paramsForEachTenant(async (tenant) => {

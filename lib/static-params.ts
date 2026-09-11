@@ -62,28 +62,36 @@ export type StaticParamTenant = {
 };
 
 /**
- * Why the routes using these helpers also set `export const dynamicParams =
- * false`.
+ * How much to prerender at build time.
  *
- * Left at the default (`true`), a param absent from `generateStaticParams` is
- * rendered on demand, which means every one of these routes needs a server
- * function standing by for slugs that, in this app, can only be typos — the
- * param sets here are enumerated from the database, so anything missing from
- * them does not exist. `false` makes that a 404 and lets the route ship as
- * plain static HTML.
+ * `PRERENDER=full` walks every tenant’s whole inventory. That is the right
+ * trade for a long-lived site with real traffic: one slow build buys instant
+ * pages for everyone afterwards.
  *
- * The cost is real and worth stating: content added through a client dashboard
- * gets no page until the next build. That is a deliberate trade for a site
- * whose inventory changes in batches, not continuously — but it is the reason
- * a publish flow needs to trigger a rebuild.
+ * Anything else — the default — prerenders nothing and lets pages render on
+ * demand, cached afterwards by `lib/content.ts`. This is the right trade for
+ * the demo deployments this repo actually ships. A demo is shown to a handful
+ * of people over a couple of days, so prerendering 4,425 pages to serve maybe
+ * thirty of them cost ~70 minutes and was killed outright by Vercel’s
+ * 45-minute build ceiling (BUILD_EXCEEDED_MAXIMUM_TIME, 2026-09-11).
  *
- * Note this interacts with the empty-array fallback below: if the database is
- * unreachable at build time, these routes prerender nothing AND refuse to
- * render on demand, so the pages 404 rather than merely being slow. A build
- * that cannot reach the database must not be deployed.
+ * The decisive reason is onboarding, not build time. `proxy.ts` matches tenant
+ * slugs by pattern and resolves them from the database, so with nothing
+ * prerendered a newly seeded client is reachable immediately, with no deploy
+ * at all — which is what makes five or six demo sites a day possible.
+ * Prerendering puts a full rebuild in front of every new client.
+ *
+ * Rejected: prerendering a reduced slice (say the first 50 listings per
+ * tenant). It halves the build but keeps a rebuild between seeding a client
+ * and their site existing, which is the cost that actually hurts here.
  */
+const PRERENDER_ALL = process.env.PRERENDER === "full";
 
 export async function activeTenants(): Promise<StaticParamTenant[]> {
+  // Returning nothing here is what switches the whole tree to on-demand
+  // rendering: every caller of `paramsForEachTenant` iterates this list.
+  if (!PRERENDER_ALL) return [];
+
   try {
     const rows = await db
       .select({

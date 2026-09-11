@@ -24,8 +24,22 @@ import {
   jsonLdProps,
 } from "@/lib/schema-org";
 
-/** Unknown params 404 instead of rendering on demand — see lib/static-params.ts. */
-export const dynamicParams = false;
+/**
+ * Declaring `generateStaticParams` marks this route SSG. When the param set is
+ * empty (PRERENDER unset) Next still renders it through the static path, which
+ * the parent layout’s `revalidate = 300` turns into ISR — and this page’s tree
+ * throws DYNAMIC_SERVER_USAGE there, 500ing every listing. Forcing dynamic
+ * rendering puts it on the same path as /calculators/[key], which works.
+ *
+ * It has to be a literal — Next rejects a computed `dynamic` field outright
+ * ("needs to be a static string"), so this cannot be conditioned on PRERENDER.
+ * The consequence is worth knowing before a production build: with this set,
+ * `generateStaticParams` below is ignored and listings are never prerendered,
+ * even under PRERENDER=full. Restoring that means first finding the dynamic
+ * API in this page’s tree that ISR rejects — it is not `searchParams`, which
+ * this page does not read.
+ */
+export const dynamic = "force-dynamic";
 
 /** Prerenders every active listing for each tenant. */
 export async function generateStaticParams() {

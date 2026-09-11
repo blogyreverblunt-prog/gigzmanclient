@@ -8,8 +8,6 @@ import { activeTenants } from "@/lib/static-params";
  * a server function alive for tenant slugs that do not exist. `lib/tenant.ts`
  * already refused those at runtime; this refuses them at the routing layer.
  */
-export const dynamicParams = false;
-
 /**
  * Owns `generateStaticParams` for the `[tenant]` segment.
  *
