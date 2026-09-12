@@ -7,6 +7,23 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+/**
+ * `/login/submit` redirects back here with a code rather than a message, so the
+ * wording lives in one place and never travels through the query string.
+ * An unrecognised code renders nothing — a hand-edited URL should not be able
+ * to put arbitrary text inside the page's error banner.
+ */
+const ERRORS: Record<string, string> = {
+  invalid: "Incorrect email or password.",
+  missing: "Enter both email and password.",
+};
+
+/** Same rule as the POST handler: reject protocol-relative `//evil.com`. */
+function safeNext(raw: unknown): string {
+  if (typeof raw !== "string" || !raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
+
 export default async function PlatformLoginPage({
   searchParams,
 }: {
@@ -14,8 +31,8 @@ export default async function PlatformLoginPage({
 }) {
   const session = await getPlatformSession();
   const params = await searchParams;
-  const rawNext = typeof params.next === "string" ? params.next : "/";
-  const next = rawNext.startsWith("/") ? rawNext : "/";
+  const next = safeNext(params.next);
+  const error = typeof params.error === "string" ? (ERRORS[params.error] ?? null) : null;
 
   if (session) redirect(next);
 
@@ -29,7 +46,7 @@ export default async function PlatformLoginPage({
         </div>
 
         <div className="mt-7 rounded-[12px] border border-line bg-surface p-6">
-          <LoginForm next={next} />
+          <LoginForm next={next} error={error} />
         </div>
       </div>
     </div>

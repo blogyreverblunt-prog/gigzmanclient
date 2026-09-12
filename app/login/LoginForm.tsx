@@ -1,32 +1,44 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { loginPlatformAdmin, type LoginState } from "./actions";
 
 interface LoginFormProps {
   next: string;
+  /** Already resolved to a sentence by the page; null when there is nothing to show. */
+  error: string | null;
 }
 
 const FIELD =
   "w-full min-h-[44px] rounded-[8px] border border-line-strong bg-surface px-3 text-[14px] text-ink focus:border-navy focus:outline-none";
 
-export default function LoginForm({ next }: LoginFormProps) {
-  const [state, formAction, pending] = useActionState<LoginState, FormData>(loginPlatformAdmin, {
-    error: null,
-  });
+/**
+ * A plain HTML form posting to `/login/submit`, not a Server Action.
+ *
+ * The reasoning is in that route. What it costs here: the error comes back as a
+ * `?error=` round trip instead of `useActionState`, and the client component
+ * exists only for the pending state. That state is an enhancement — with
+ * JavaScript off the form still submits and still signs in, which is the point.
+ */
+export default function LoginForm({ next, error }: LoginFormProps) {
+  const [pending, setPending] = useState(false);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      method="post"
+      action="/login/submit"
+      onSubmit={() => setPending(true)}
+      className="space-y-4"
+    >
       <input type="hidden" name="next" value={next} />
 
-      {state.error ? (
+      {error ? (
         <p
           role="alert"
           className="flex items-start gap-2 rounded-[8px] bg-status-danger-soft px-3.5 py-3 text-[13px] text-status-danger"
         >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          {state.error}
+          {error}
         </p>
       ) : null}
 
