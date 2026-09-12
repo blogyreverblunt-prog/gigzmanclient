@@ -335,9 +335,66 @@ export const queries = pgTable("queries", {
   consentAt: timestamp("consent_at", { withTimezone: true }),
 
   isArchived: boolean("is_archived").notNull().default(false),
+
+  /**
+   * Caller-supplied dedupe key, taken from the `Idempotency-Key` header on
+   * `POST /api/v1/leads`. Null for leads submitted through this deployment's
+   * own forms — a Server Action has no network retry to deduplicate.
+   *
+   * Unique per client rather than globally: two separately-hosted client sites
+   * that happen to generate the same uuid are submitting two different leads,
+   * and one must not silently swallow the other. Postgres treats NULLs as
+   * distinct in a unique constraint, so website-submitted rows still insert
+   * freely however many of them there are.
+   */
+  externalId: varchar("external_id", { length: 64 }),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [unique("queries_client_external_id_unique").on(t.clientId, t.externalId)]);
+
+/**
+ * Per-client API credentials for `POST /api/v1/leads`.
+ *
+ * Exists because a client site hosted outside this deployment cannot use the
+ * write path the tenants here use: `submitQuery` is a Server Action that reads
+ * the tenant from the `x-tenant` header `proxy.ts` sets, and a site on its own
+ * Vercel project has neither. The key replaces that header as the tenant claim
+ * — which is why `clientId` is resolved from the key and never from the request
+ * body.
+ *
+ * The secret is never stored. `keyPrefix` is the lookup handle (safe to display
+ * in a dashboard so an operator can tell two keys apart); `keyHash` is a
+ * SHA-256 of the secret half.
+ *
+ * SHA-256 rather than bcrypt, which is the opposite of the choice made for user
+ * passwords and deliberately so: bcrypt's cost exists to slow down guessing of
+ * low-entropy human-chosen secrets. An API key here is 32 bytes from a CSPRNG,
+ * so there is nothing to guess, and a per-request 100ms KDF would only tax the
+ * endpoint.
+ */
+export const clientApiKeys = pgTable(
+  "client_api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+
+    /** Lookup handle — the middle segment of `gz_live_<prefix>_<secret>`. */
+    keyPrefix: varchar("key_prefix", { length: 16 }).notNull().unique(),
+    /** SHA-256 (hex) of the secret segment. The secret itself is shown once, at creation. */
+    keyHash: varchar("key_hash", { length: 64 }).notNull(),
+
+    /** Operator-facing name, e.g. "high-properties production". */
+    label: text("label").notNull(),
+
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    /** Set to revoke. Checked on every request; a revoked key is treated as unknown. */
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+);
 
 export const queryStatusHistory = pgTable("query_status_history", {
   id: uuid("id").primaryKey().defaultRandom(),

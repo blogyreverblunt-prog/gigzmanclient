@@ -31,6 +31,7 @@ tests pass, and do not invent a command. What actually exists:
 | `pnpm db:generate` / `db:migrate` | Drizzle migrations |
 | `pnpm seed:client <slug> [--force]` | Load a client's YAML into the database. `--force` refuses when the database is newer than the YAML — a dashboard edit would be overwritten — unless `--overwrite-dashboard-edits` is also passed |
 | `pnpm export:client <slug>` | The reverse: regenerate `clients/<slug>/` from the database, so the checked-in file says what the live site says. Preserves `_status` and the file header; inline body comments are lost, so read the diff |
+| `pnpm keys:issue <slug>` | Mint an API key for a client site hosted outside this deployment. `--list` / `--revoke <prefix>` manage them. The secret prints **once** and is stored only as a SHA-256 digest |
 
 `playwright` is a devDependency for `dry-run` only. Its browser binaries may not
 be installed (`npx playwright install chromium`).
@@ -69,6 +70,12 @@ guard in `lib/actions/dashboard-actions.ts`:
 ```ts
 await assertOwnership(row, clientId);   // throws if row.clientId !== clientId
 ```
+
+The same rule at the perimeter: `POST /api/v1/leads` resolves `clientId` from
+the caller's **API key**, never from the request body. A `clientId` in the JSON
+is ignored, not validated — there is nothing to validate, because nothing reads
+it. If a payload field could select the tenant, one key would write into every
+client's data.
 
 **2. Public pages must not call `headers()`.** Any page that does is forced into
 dynamic rendering, Next sends `no-store`, and every request re-renders on the
@@ -155,6 +162,35 @@ So the same secret is written two different ways, and both are correct:
 Editing it on Vercel needs a **redeploy**: an env var change does not reach a
 deployment that already exists.
 
+## Two doors into `queries`, one set of rules
+
+Leads reach the database two ways, and the difference is only *how the tenant is
+established*:
+
+| | Tenant form on this deployment | Client site hosted elsewhere |
+|---|---|---|
+| Entry | `submitQuery` Server Action | `POST /api/v1/leads` |
+| Tenant from | `x-tenant` header set by `proxy.ts` | `Authorization: Bearer` API key |
+| File | `lib/actions/submit-query.ts` | `app/api/v1/leads/route.ts` |
+
+The second exists because a site on its own hosting has no `proxy.ts`, sets no
+`x-tenant`, and cannot invoke a Server Action at all — the sites are handed to
+clients and hosted separately once delivered.
+
+**Everything after tenant resolution is shared, in `lib/leads/create-lead.ts`** —
+what a valid phone number is, that consent is mandatory, that PAN and Aadhaar are
+refused, the honeypot. Do not add a rule to one path only. Two copies drift, and
+the drift shows up as inconsistent rows rather than as an error.
+
+Keys live in `client_api_keys`, hashed with **SHA-256, not bcrypt** — the
+opposite of the choice for user passwords, and deliberately: bcrypt's cost exists
+to slow guessing of low-entropy human secrets, while a key here is 32 CSPRNG
+bytes with nothing to guess. The reasoning is on the table in `lib/db/schema.ts`.
+
+The endpoint sends **no CORS headers** on purpose. It is meant to be called from
+the client site's server, where the key stays secret; a key shipped to a browser
+is public the moment the page loads. A failing preflight keeps that mistake loud.
+
 ## Adding a tenant
 
 Four steps. Since CD-01 none of them edits application code — the template
@@ -222,6 +258,9 @@ render time so the figure cannot drift from what the site shows.
 | `lib/content.ts` | All read-side data access, clientId-scoped |
 | `lib/db/schema.ts` | 16 tables, all scoped by `clientId` |
 | `lib/actions/` | Server Actions (dashboard CRUD, lead submission) |
+| `lib/leads/create-lead.ts` | Lead validation + insert, shared by both write paths |
+| `lib/api-keys.ts` | Mint / verify the per-client keys for `/api/v1/leads` |
+| `app/api/v1/leads/` | Lead ingest for client sites hosted outside this deployment |
 | `lib/verticals/` | Per-industry config (`realestate`, `cafirm`) |
 | `lib/premium-v2/` | Template copy + per-client switches |
 | `components/realestate/premium-v2/` | The one surviving template's components |
