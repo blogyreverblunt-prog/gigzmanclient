@@ -123,7 +123,7 @@ include every argument that changes the result.**
 There is no longer a separate `/admin` section — `/` itself is the single gated
 dashboard, and it lists every client for the signed-in team member; access is controlled by the platform login rather than by slug obscurity.
 
-### `.env.local` trap: bcrypt hashes must be escaped
+### `.env.local` trap: bcrypt hashes must be escaped — in the file only
 
 dotenv performs `$VARIABLE` expansion, and a bcrypt hash is literally
 `$2b$10$…`. Pasted raw, it is silently mangled before the app sees it and every
@@ -133,6 +133,27 @@ strips them, then expands. Escape every `$`:
 ```bash
 PLATFORM_ADMIN_PASSWORD_HASH=\$2b\$10\$KlkzN7…
 ```
+
+**The escaping is local-only, and a real deployment needs the opposite.** It
+is undone by `@next/env`'s `_resolveEscapeSequences`, which rewrites
+`\$` back to `$` — and that runs *only* on keys parsed out of a `.env`
+**file**. `.env.local` is gitignored, so no such file exists in the
+deployment: Vercel injects env vars straight into `process.env` and nothing
+unescapes them. Paste the escaped form into the Vercel dashboard and
+`bcrypt.compare` receives the backslashes verbatim, reads them as an invalid
+salt and returns `false` — so the login fails with the *same* "Incorrect
+email or password" as the mangled-locally case, from a hash that verifies
+fine on your machine. Nothing in the log says which of the two it was.
+
+So the same secret is written two different ways, and both are correct:
+
+| Where | Form |
+|---|---|
+| `.env.local`, or any `.env` file | `\$2b\$10\$…` — escaped, or dotenv eats the `$` |
+| Vercel, or any real environment variable | `$2b$10$…` — bare, or bcrypt reads an invalid salt |
+
+Editing it on Vercel needs a **redeploy**: an env var change does not reach a
+deployment that already exists.
 
 ## Adding a tenant
 

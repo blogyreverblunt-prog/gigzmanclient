@@ -25,7 +25,7 @@ values live on the deployment. The variables are:
 | `DATABASE_URL` | Postgres connection string |
 | `AUTH_SECRET` | Dashboard session signing key — `openssl rand -base64 32` |
 | `TENANT_MODE` | `path` for the shared deployment, `host` for a client's own domain |
-| `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD_HASH` | Gate on the template-library pages |
+| `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD_HASH` | Gate on the internal dashboard (`/`, `/clients/**`). Escaped in `.env.local`, **bare** in a deployment's env vars — see AGENTS.md |
 
 With `TENANT_MODE=path`, a tenant is served at
 `/{vertical}/{template}/{client-slug}` — e.g.
