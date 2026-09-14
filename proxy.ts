@@ -100,6 +100,13 @@ export function proxy(request: NextRequest) {
   // one client that domain serves, and there is no platform dashboard there.
   if (vertical === "clients") return NextResponse.next();
 
+  // The cross-client lead inbox (app/leads/). Same gate and same reason as
+  // `clients` above: "leads" is not a registered vertical id, so without this
+  // the unknown-vertical redirect below would bounce it to `/` with nothing on
+  // screen saying why. Path mode only — host mode serves one client's own
+  // domain and has no platform dashboard on it.
+  if (vertical === "leads") return NextResponse.next();
+
   if (!vertical || !isVerticalId(vertical)) {
     // An unknown vertical segment would otherwise render a tenant page with
     // no tenant resolved.
