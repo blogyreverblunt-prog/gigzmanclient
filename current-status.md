@@ -151,6 +151,58 @@ three, because the 32-minute figure was measured on a smaller site.
 
 ---
 
+## CD-10-lead-ingest-api — COMPLETE (self-verified; did NOT go through the agent pipeline)
+
+**Tenants touched:** none in output — no tenant page, route or rendered result
+changed. `high-properties` and `nayra-realtors` were written to during
+verification and cleaned up afterwards.
+
+**What shipped:** an HTTP door into `queries` for client sites hosted outside
+this deployment. Delivered sites move to their own hosting, where there is no
+`proxy.ts`, no `x-tenant` header and no way to invoke a Server Action — so the
+existing write path is unreachable to them.
+
+- `client_api_keys` table + `queries.external_id`, migration
+  `0010_brief_unus` — **already applied to the shared database**
+- `lib/api-keys.ts` — mint / verify, joined to `clients.is_active` so a
+  deactivated tenant is off the air for API writes as it already is for forms
+- `lib/leads/create-lead.ts` — validation and insert, now shared by both write
+  paths so their rules cannot drift
+- `app/api/v1/leads/route.ts` — the endpoint
+- `scripts/issue-api-key.ts` → `pnpm keys:issue` (issue / list / revoke)
+- `lib/actions/submit-query.ts` reduced to what is genuinely its own: tenant
+  resolution from headers, and reading a FormData
+
+**Why `clientId` comes from the key and never the body:** if a payload field
+could select the tenant, one key would write into every other client's data. A
+`clientId` in the request is ignored rather than rejected — there is nothing to
+reject, because nothing reads it.
+
+**SHA-256 for keys, not bcrypt** — deliberately opposite to the password choice.
+bcrypt's cost exists to slow guessing of low-entropy human secrets; a key here is
+32 CSPRNG bytes, so there is nothing to guess and a per-request KDF would only
+tax the endpoint.
+
+**Evidence:** `pnpm build` exit 0, `tsc --noEmit` exit 0, `/api/v1/leads` present
+in the route manifest. 27 pure-logic assertions passed (token format, bearer
+parsing, every validation rule, PAN/Aadhaar rejection including one hidden in the
+free-text `note`). Live against the real database: `401` for
+missing/garbage/malformed/revoked credentials, `422` with field errors, `201`
+plus a `query_status_history` row, `200` with `duplicate: true` on a replayed
+`Idempotency-Key`, `405` on GET. **The decisive test:** an identical payload with
+an identical `Idempotency-Key`, sent under two different keys, produced
+`Q-202609-T1KLT` under `high-properties` and `Q-202609-0B5WB` under
+`nayra-realtors` — scoping follows the key, and idempotency is scoped per client
+rather than globally. Both test leads deleted; both test keys revoked.
+
+**Known limitation — carried forward, not fixed.** Phases 3–5 of the plan are
+untouched: no client site calls this yet, so it has never been exercised from
+outside this machine. The endpoint is also **not deployed** — the migration is
+live while the code is not. That is the safe order (nothing reads the new column
+yet), but schema and code stay out of step until `main` is pushed.
+
+---
+
 ## Content status — NOT deliverable
 
 **A `VERIFY_PASS` is not a delivery.** Neither CD-00 nor CD-01 touched content;
@@ -205,3 +257,13 @@ Fix before any hand-over, and re-run `pnpm check:content <slug>` per tenant.
   step" is wrong and is being corrected by CD-01.
 - The entire project section of `AGENTS.md`, and an 11-line change in
   `app/layout.tsx`, are **uncommitted** in the working tree.
+- **`/login/submit` has no rate limiting or lockout.** Confirmed empirically on
+  production, not inferred: repeated unauthenticated POSTs from an external
+  machine were all answered normally, with no delay, throttle or block. The
+  platform password is a name-plus-year pattern, and this login gates every
+  client's dashboard. `/api/v1/leads` got a per-client ceiling in CD-10; this
+  endpoint did not, and is the more valuable target of the two.
+- **Vercel's production branch is `main`, GitHub's default branch is
+  `HR-Dashboard`.** They disagree, so work pushed to the branch GitHub shows
+  first never deploys. This already cost a full debugging cycle — a fix looked
+  live on GitHub while production served an older commit.

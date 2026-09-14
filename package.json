@@ -10,6 +10,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "seed:client": "tsx --env-file=.env.local scripts/seed-client.ts",
+    "keys:issue": "tsx --env-file=.env.local scripts/issue-api-key.ts",
     "check:content": "tsx --env-file=.env.local scripts/check-content.ts",
     "export:client": "tsx --env-file=.env.local scripts/export-client.ts",
     "dry-run": "tsx --env-file=.env.local scripts/dry-run.ts",
