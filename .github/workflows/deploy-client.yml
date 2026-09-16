@@ -1,0 +1,119 @@
+# Deploy one client's site to that client's own Vercel account.
+#
+# Why this exists rather than Vercel's own Git integration:
+#
+# Vercel ties a Vercel account to a single GitHub account, so a client's
+# Vercel cannot connect to a repository owned by ours. The documented way
+# around that is to deploy with a token instead of the GitHub OAuth link,
+# which is what this workflow does.
+#
+# The stronger reason is disclosure. Connecting this repository to a client's
+# Vercel would give that client read access to the whole monorepo — every
+# other client's content, and their YAML. Here, GitHub builds the site and
+# uploads only the build output; the client's Vercel never sees the source.
+#
+# Per-client configuration lives in a GitHub *Environment* named for the
+# tenant slug, each holding the same three secret names. That is why this
+# workflow can stay one file rather than one per client.
+#
+#   VERCEL_TOKEN        a token from THAT client's Vercel account
+#   VERCEL_ORG_ID       their account or team id
+#   VERCEL_PROJECT_ID   the project id within it
+#
+# Everything else — DATABASE_URL, TENANT_ONLY, PRIMARY_TENANT_SLUG,
+# GEMINI_API_KEY — is read from the Vercel project itself by `vercel pull`,
+# so this file never holds a client's configuration.
+
+name: Deploy client site
+
+on:
+  workflow_dispatch:
+    inputs:
+      client:
+        description: Which tenant to deploy
+        required: true
+        type: choice
+        options:
+          - arora-k-associates
+          - balaji-properties
+          - evergreen-real-estate
+          - expert-realtors
+          - high-properties
+          - housing-hub
+          - nayra-realtors
+          - urban-flat-real-estate
+          - venkut-buildcon
+      target:
+        description: Deployment target
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - preview
+
+concurrency:
+  # One deploy at a time per client. A second run supersedes a queued one but
+  # never cancels a deploy already uploading, which would leave the project
+  # with a half-written build.
+  group: deploy-${{ inputs.client }}-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Selects that client's secrets. The environment name IS the tenant slug.
+    environment: ${{ inputs.client }}
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          # Resolved from "packageManager" in package.json so this cannot
+          # drift from what the repo is actually built with.
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Pull this client's Vercel configuration
+        # Writes .vercel/.env.<target>.local, which `vercel build` then uses.
+        # The client's own env — including which tenant this deployment serves
+        # via TENANT_ONLY / PRIMARY_TENANT_SLUG — comes from here, never from
+        # this repository.
+        run: npx vercel@latest pull --yes --environment=${{ inputs.target }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        # Built here, not on Vercel. `--prebuilt` below then uploads only the
+        # output, which is what keeps the source out of the client's account.
+        #
+        # This does NOT sidestep Vercel's per-deployment function limit — that
+        # is applied to the uploaded output. The outputFileTracingExcludes in
+        # next.config.ts are what keep the function count under it.
+        run: npx vercel@latest build ${{ inputs.target == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url=$(npx vercel@latest deploy --prebuilt ${{ inputs.target == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed ${{ inputs.client }} to $url"
+
+      - name: Summary
+        run: |
+          {
+            echo "### ${{ inputs.client }} → ${{ inputs.target }}"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- URL: ${{ steps.deploy.outputs.url }}"
+          } >> "$GITHUB_STEP_SUMMARY"
