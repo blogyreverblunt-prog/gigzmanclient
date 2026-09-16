@@ -1,0 +1,111 @@
+# Client seed data — Balaji Properties (Premium V2 template)
+#
+# NAP below is read from the client's own Google Business Profile, rendered in
+# a real browser since the listing is client-side only. Verified from that
+# listing: name, category ("Real estate agent"), rating 5.0 from 4 reviews,
+# address, phone, plus code and coordinates. The signed-out listing exposes no
+# website, no email and no opening hours, so those stay empty or placeholder
+# rather than being invented — see `_status` at the bottom.
+#
+# Loaded into the database by `pnpm seed:client balaji-properties`.
+# Run `pnpm check:content balaji-properties` for the placeholder checklist.
+
+slug: balaji-properties
+vertical: realestate
+template: premium-v2
+display_name: Balaji Properties
+is_demo: false
+
+firm:
+  name: Balaji Properties
+  tagline: ""
+  overview: >-
+    Balaji Properties is a Gurugram property firm working with buyers, tenants
+    and investors across Palam Vihar and the surrounding sectors. Every listing
+    is reviewed before it goes live, and RERA registration status is shown
+    plainly on every property.
+  established_year: ""
+  firm_registration_number: ""
+  business_category: Real Estate Agent
+  logo_url: /verticals/realestate/templates/premium-v2/brand/balaji-properties-logo.png
+
+contact:
+  phone: "098914 55955"
+  whatsapp: "098914 55955"
+  email: ""
+  address_line: "863, Choma, Block B, Pocket C, Palam Vihar"
+  locality: "Gurugram"
+  region: Haryana
+  postal_code: "122017"
+  country: India
+  latitude: "28.5048967"
+  longitude: "77.030576"
+  google_maps_url: "https://www.google.com/maps/place/Balaji+Properties/@28.5048967,77.030576,997m/data=!3m2!1e3!4b1!4m6!3m5!1s0x390d198f30eab125:0xe0e7639e1cd5eb17"
+
+# The listing exposes no hours in the signed-out view, so this is a plain
+# office-hours assumption pending the client's confirmation.
+opening_hours:
+  - { day: Monday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Tuesday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Wednesday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Thursday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Friday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Saturday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Sunday, opens: "10:00", closes: "19:00", closed: true }
+
+social_links: {}
+
+seo:
+  title: Balaji Properties — Buy, Sell & Rent Property in Gurugram
+  description: >-
+    Residential and commercial property in Palam Vihar and across Gurugram —
+    buying, selling and renting, with locality market intelligence and buyer
+    calculators.
+
+analytics:
+  ga4_measurement_id: ""
+  search_console_verification: ""
+
+features:
+  reviews: true
+  pricing: true
+  awards: false
+  client_logos: false
+  team: false
+
+team: []
+
+notification_email: ""
+
+_status:
+  slug: verified
+  display_name: verified
+  firm.name: verified
+  firm.business_category: verified
+  firm.logo_url: verified
+  firm.tagline: pending
+  firm.overview: placeholder
+  firm.established_year: pending
+  firm.firm_registration_number: pending
+  contact.phone: verified
+  contact.whatsapp: placeholder
+  contact.email: pending
+  contact.address_line: verified
+  contact.locality: verified
+  contact.region: verified
+  contact.postal_code: verified
+  contact.country: verified
+  contact.google_maps_url: verified
+  contact.latitude: verified
+  contact.longitude: verified
+  opening_hours: placeholder
+  social_links: pending
+  seo.title: placeholder
+  seo.description: placeholder
+  analytics.ga4_measurement_id: pending
+  analytics.search_console_verification: pending
+  team: pending
+  notification_email: pending
+  content.properties: placeholder
+  content.localities: placeholder
+  content.updates: placeholder

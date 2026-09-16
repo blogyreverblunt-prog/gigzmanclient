@@ -1,0 +1,112 @@
+# Client seed data — Housing Hub (Premium V2 template)
+#
+# NAP below is read from the client's own Google Business Profile, rendered in
+# a real browser since the listing is client-side only. Verified from that
+# listing: name, category ("Real estate agent"), rating 5.0 from 4 reviews,
+# address, phone, plus code and coordinates. The signed-out listing exposes no
+# website, no email and no opening hours, so those stay empty or placeholder
+# rather than being invented — see `_status` at the bottom.
+#
+# Loaded into the database by `pnpm seed:client housing-hub`.
+# Run `pnpm check:content housing-hub` for the placeholder checklist.
+
+slug: housing-hub
+vertical: realestate
+template: premium-v2
+display_name: Housing Hub
+is_demo: false
+
+firm:
+  name: Housing Hub
+  tagline: ""
+  overview: >-
+    Housing Hub is a Gurugram property firm working with buyers, tenants
+    and investors across Sector 23 and the surrounding Gurugram sectors. Every listing
+    is reviewed before it goes live, and RERA registration status is shown
+    plainly on every property.
+  established_year: ""
+  firm_registration_number: ""
+  business_category: Real Estate Agent
+  logo_url: /verticals/realestate/templates/premium-v2/brand/housing-hub-logo.png
+
+contact:
+  phone: "098712 80244"
+  whatsapp: "098712 80244"
+  email: ""
+  address_line: "700P, opposite Ansal Plaza, Choma, Sector 23"
+  locality: "Gurugram"
+  region: Haryana
+  postal_code: "122017"
+  country: India
+  latitude: "28.5114567"
+  longitude: "77.0419641"
+  google_maps_url: "https://www.google.com/maps/place/HOUSING+HUB/@28.5114614,77.0393892,997m/data=!3m2!1e3!4b1!4m6!3m5!1s0x390d19816aaaaaab:0x4ba1dc92b2865d58"
+
+# The listing exposes no hours in the signed-out view, so this is a plain
+# office-hours assumption pending the client's confirmation.
+opening_hours:
+  - { day: Monday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Tuesday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Wednesday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Thursday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Friday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Saturday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Sunday, opens: "10:00", closes: "19:00", closed: true }
+
+social_links:
+  facebook: "https://facebook.com"
+
+seo:
+  title: Housing Hub — Buy, Sell & Rent Property in Gurugram
+  description: >-
+    Residential and commercial property in Sector 23 and across Gurugram —
+    buying, selling and renting, with locality market intelligence and buyer
+    calculators.
+
+analytics:
+  ga4_measurement_id: ""
+  search_console_verification: ""
+
+features:
+  reviews: true
+  pricing: true
+  awards: false
+  client_logos: false
+  team: false
+
+team: []
+
+notification_email: ""
+
+_status:
+  slug: verified
+  display_name: verified
+  firm.name: verified
+  firm.business_category: verified
+  firm.logo_url: verified
+  firm.tagline: pending
+  firm.overview: placeholder
+  firm.established_year: pending
+  firm.firm_registration_number: pending
+  contact.phone: verified
+  contact.whatsapp: placeholder
+  contact.email: pending
+  contact.address_line: verified
+  contact.locality: verified
+  contact.region: verified
+  contact.postal_code: verified
+  contact.country: verified
+  contact.google_maps_url: verified
+  contact.latitude: verified
+  contact.longitude: verified
+  opening_hours: placeholder
+  social_links: placeholder
+  seo.title: placeholder
+  seo.description: placeholder
+  analytics.ga4_measurement_id: pending
+  analytics.search_console_verification: pending
+  team: pending
+  notification_email: pending
+  content.properties: placeholder
+  content.localities: placeholder
+  content.updates: placeholder

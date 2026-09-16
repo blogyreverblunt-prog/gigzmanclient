@@ -1,0 +1,85 @@
+# Insights / market updates — DEMO CONTENT ONLY. Figures are illustrative.
+
+_status: placeholder
+
+updates:
+  - slug: dwarka-expressway-price-trend-2026
+    title: "Why Dwarka Expressway Has Outpaced Every Other Corridor This Year"
+    category: Market Trends
+    excerpt: >-
+      A look at what's driving the fastest price appreciation among the
+      corridors tracked on this site, and what it means for buyers weighing
+      entry price against possession timeline.
+    body: |
+      Dwarka Expressway has recorded the sharpest year-on-year price movement
+      of any corridor tracked here, driven largely by improved connectivity
+      to Delhi and a concentrated wave of new-launch inventory from national
+      developers entering the corridor at scale.
+
+      Most of the stock currently available is under construction, which
+      keeps entry prices lower than established corridors like Golf Course
+      Road — but it also means buyers are taking on possession-timeline risk
+      that doesn't exist with ready-to-move inventory elsewhere.
+
+      For buyers prioritising near-term possession, New Gurugram's builder
+      floor segment offers a middle ground: largely complete construction at
+      a lower price point than the expressway's flagship towers.
+    applicable_year: "2026"
+    sources: []
+    status: published
+    author_name: Simran Chadha
+    reviewer_name: null
+    published_at: "2026-07-15"
+
+  - slug: rera-registration-what-buyers-should-check
+    title: "RERA Registration: What to Actually Check Before You Book"
+    category: Regulatory
+    excerpt: >-
+      A registration number on a listing isn't the end of the checklist —
+      here's what it confirms and what it doesn't.
+    body: |
+      Every advertisement for a registered project is required to carry its
+      RERA registration number under the Real Estate (Regulation and
+      Development) Act, 2016. That number is a starting point for
+      verification, not a substitute for it.
+
+      Before relying on a registration number shown on any listing, it's
+      worth checking it directly on the relevant state RERA authority's
+      website, where the project's approved plan, promised timeline and any
+      complaints filed against it are a matter of public record.
+
+      Where a listing shows no registration number, it should be treated as
+      provisional — the project may be genuinely pending registration, but
+      that status should be confirmed before any commitment is made.
+    applicable_year: "2026"
+    sources: []
+    status: published
+    author_name: Rohan Kapoor
+    reviewer_name: null
+    published_at: "2026-06-02"
+
+  - slug: emi-vs-rent-golf-course-road
+    title: "EMI vs. Rent on Golf Course Road: Running the Numbers"
+    category: Buying Guide
+    excerpt: >-
+      A worked example comparing a typical EMI against prevailing rent for a
+      comparable 3 BHK on Golf Course Road.
+    body: |
+      For a representative 3 BHK on Golf Course Road, the EMI on a
+      20-year home loan at a mid-range interest rate works out to
+      meaningfully more than the monthly rent for a comparable unit in the
+      same micro-market.
+
+      That gap narrows over the loan tenure as rent typically rises faster
+      than a fixed EMI, but it means the near-term cash flow comparison
+      favours renting for buyers without a strong down payment.
+
+      The EMI and rental yield calculators on this website let you run this
+      comparison against a specific property and loan structure rather than
+      a generic example — both process figures entirely in your browser.
+    applicable_year: "2026"
+    sources: []
+    status: published
+    author_name: Simran Chadha
+    reviewer_name: null
+    published_at: "2026-05-10"

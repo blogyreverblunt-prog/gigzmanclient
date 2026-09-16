@@ -1,0 +1,170 @@
+# Legal and disclaimer pages — adapted for the real-estate vertical.
+#
+# Baseline text only, not reviewed by a lawyer. Whoever delivers this
+# template to a real agent must adapt this before the site goes live,
+# particularly the privacy policy and the RERA disclaimer.
+
+_status: placeholder
+
+pages:
+  - slug: privacy-policy
+    title: Privacy Policy
+    body: |
+      This policy describes how information submitted through this website is handled.
+
+      ## Information collected
+
+      When an enquiry is submitted, the details entered in the form are collected —
+      typically name, contact details, the property or locality the enquiry relates
+      to, and any message provided.
+
+      The website does not ask for PAN, Aadhaar, passwords, one-time passwords, bank
+      details or loan documents, and these should not be submitted through it.
+
+      ## How the information is used
+
+      Enquiry details are used to respond to the enquiry and arrange a site visit or
+      further discussion. Information is not sold or rented.
+
+      ## Calculator inputs
+
+      Values entered into the EMI, stamp duty and rental yield calculators on this
+      website are processed in the browser to produce an estimate. They are not
+      transmitted to the agency, are not stored, and are not included in any enquiry
+      submitted after a calculation.
+
+      ## Analytics
+
+      Aggregate usage measurement may be used to understand how the website is used.
+      This measurement is configured to exclude names, contact details, message
+      content and any price or budget figure.
+
+      ## Retention
+
+      Enquiry records are retained for as long as necessary to respond to the enquiry
+      and to meet any applicable record-keeping requirement.
+
+      ## Contact
+
+      Questions about this policy may be directed to the agency using the contact
+      details published on this website.
+
+  - slug: terms-of-use
+    title: Terms of Use
+    body: |
+      These terms apply to use of this website.
+
+      ## Purpose of this website
+
+      This website provides information about property listings, locality market
+      data and buyer calculators. It is informational and does not constitute an
+      offer, a booking, or a reservation of any listing.
+
+      ## No agreement created by browsing
+
+      Viewing a listing, using a calculator or submitting an enquiry does not create
+      any agreement, tenancy or sale between the visitor and the agency, the
+      developer, or the seller. A transaction proceeds only after separate,
+      written agreement between the relevant parties.
+
+      ## Accuracy of listings
+
+      Listing details — price, carpet area, possession timeline, amenities and
+      specifications — are indicative and subject to confirmation by the developer
+      or seller, and may change without notice. RERA registration status is shown
+      where available; where it is not shown, registration is pending.
+
+      ## External links
+
+      Links to external sources, including regulatory authority websites, are
+      provided for reference. The agency is not responsible for content on external
+      websites.
+
+      ## Limitation
+
+      The agency does not accept liability for any action taken on the basis of
+      content on this website without independent verification.
+
+  - slug: disclaimer
+    title: General Disclaimer
+    body: |
+      Content on this website is general in nature and published for information
+      only.
+
+      ## RERA registration
+
+      Under the Real Estate (Regulation and Development) Act, 2016, advertisements
+      for a registered project must carry its RERA registration number. Where a
+      listing on this website shows a registration number, it should be
+      independently verified on the relevant state RERA authority's website before
+      relying on it. Where a listing does not show a registration number,
+      registration is pending and the listing should be treated as provisional.
+
+      ## Listing details
+
+      Price, carpet area, possession timeline, specifications and amenities are
+      subject to confirmation and change by the developer, seller or the relevant
+      authority, and should be verified independently before any transaction.
+
+      ## No outcome assured
+
+      No outcome — including loan approval, registration, possession date or resale
+      value — is assured. Outcomes depend on facts specific to each transaction.
+
+      Professional and legal advice should be obtained before entering into any
+      property transaction.
+
+  - slug: calculator-disclaimer
+    title: Calculator Disclaimer
+    body: |
+      The calculators on this website — EMI, stamp duty and rental yield — produce
+      indicative estimates only.
+
+      ## What the estimates are
+
+      Each calculator applies a stated formula and a set of assumptions, shown
+      alongside the calculator. An estimate is not a loan offer, a sanction, a
+      quotation from any lender, or professional advice.
+
+      ## Assumptions
+
+      The EMI calculator uses the standard reducing-balance method and does not
+      account for processing fees, insurance, prepayment or a floating rate
+      resetting over the loan tenure. The stamp duty calculator uses a
+      representative rate structure that has not been confirmed against the state
+      notification currently in force. The rental yield calculator assumes a flat
+      expense ratio for maintenance, property tax and vacancy rather than actual
+      costs.
+
+      ## Rate verification
+
+      A calculator displays its review status. Where rates are shown as awaiting
+      professional verification, the estimate should be treated as provisional and
+      confirmed with a lender, chartered accountant or the relevant authority before
+      being relied on.
+
+      ## Your inputs
+
+      Values entered are processed in the browser and are not transmitted to or
+      stored by the agency.
+
+  - slug: cookie-notice
+    title: Cookie and Analytics Notice
+    body: |
+      This notice describes the use of cookies and similar technologies on this
+      website.
+
+      ## Analytics
+
+      Where analytics measurement is enabled, cookies may be used to understand how
+      visitors use the website in aggregate — properties viewed, filters used, and
+      whether an enquiry was submitted.
+
+      Analytics measurement on this website is configured to exclude names, contact
+      details, enquiry message content, and any price or budget figure entered into
+      the property filters or calculators.
+
+      ## Managing cookies
+
+      Browsers can be configured to block or delete cookies. Blocking cookies does
+      not prevent use of this website.

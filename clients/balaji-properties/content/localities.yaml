@@ -1,0 +1,99 @@
+# Locality / corridor pages — DEMO CONTENT ONLY.
+#
+# Every market figure below is fabricated pending real market data from
+# Expert Realtors. `description` is written to be genuinely distinct per
+# locality (see the thin-content/doorway-page guard in check-content.ts)
+# rather than a name-swapped template paragraph.
+
+_status: placeholder
+
+localities:
+  - slug: golf-course-road
+    name: Golf Course Road
+    corridor: Golf Course Road
+    avg_price_per_sqft: 18500
+    yoy_change_percent: 7.2
+    rental_yield_percent: 2.8
+    active_projects: 12
+    best_for: Premium high-rise apartments and Grade-A office space
+    description: >-
+      Golf Course Road is Gurugram's most established premium corridor,
+      anchored by high-rise residential towers and Grade-A commercial
+      buildings along the Golf Course. Social infrastructure — schools,
+      hospitals and malls — is the most mature of any corridor on this site,
+      which keeps rental demand steady even as new supply comes online
+      further out on the extension road.
+    hero_image: /verticals/realestate/templates/premium-v2/images/corridor-golf-course-road.png
+    last_verified_at: "2026-08-01"
+    is_published: true
+
+  - slug: dwarka-expressway
+    name: Dwarka Expressway
+    corridor: Dwarka Expressway
+    avg_price_per_sqft: 9800
+    yoy_change_percent: 11.5
+    rental_yield_percent: 2.2
+    active_projects: 24
+    best_for: New-launch apartments and builder floors
+    description: >-
+      Dwarka Expressway has seen the fastest price appreciation of any
+      corridor covered here, driven by improved connectivity to Delhi and a
+      wave of new-launch inventory from national developers. Most stock here
+      is under construction, so buyers are weighing possession timelines
+      against entry price more than in the established corridors.
+    hero_image: /verticals/realestate/templates/premium-v2/images/corridor-dwarka-expressway.png
+    last_verified_at: "2026-08-01"
+    is_published: true
+
+  - slug: sohna-road
+    name: Sohna Road
+    corridor: Sohna Road
+    avg_price_per_sqft: 8200
+    yoy_change_percent: 6.4
+    rental_yield_percent: 3.1
+    active_projects: 15
+    best_for: Independent villas and mid-rise rental apartments
+    description: >-
+      Sohna Road mixes established mid-rise apartment stock with a growing
+      cluster of gated villa developments further south. Rental yields here
+      run higher than the premium corridors, largely because entry prices
+      have stayed more accessible relative to the connectivity on offer.
+    hero_image: /verticals/realestate/templates/premium-v2/images/corridor-sohna-road.webp
+    last_verified_at: "2026-08-01"
+    is_published: true
+
+  - slug: southern-peripheral-road
+    name: Southern Peripheral Road
+    corridor: Southern Peripheral Road
+    avg_price_per_sqft: 7600
+    yoy_change_percent: 9.1
+    rental_yield_percent: 2.5
+    active_projects: 18
+    best_for: Licensed residential plots and mid-segment apartments
+    description: >-
+      SPR (Southern Peripheral Road) connects Golf Course Road Extension to
+      Sohna Road and has become the corridor of choice for plotted
+      development, alongside a growing base of mid-segment apartment
+      projects. Plot approvals here are licensed under a well-documented
+      layout process, which buyers on this corridor tend to prioritise.
+    hero_image: /verticals/realestate/templates/premium-v2/images/corridor-southern-peripheral-road.png
+    last_verified_at: "2026-08-01"
+    is_published: true
+
+  - slug: new-gurugram
+    name: New Gurugram
+    corridor: Dwarka Expressway
+    avg_price_per_sqft: 8900
+    yoy_change_percent: 10.2
+    rental_yield_percent: 2.4
+    active_projects: 20
+    best_for: Builder floors and SCO (shop-cum-office) plots
+    description: >-
+      New Gurugram covers the sectors developing along the Dwarka
+      Expressway's southern stretch, with a mix of independent builder
+      floors and SCO retail plots fronting the planned high street corridor.
+      Infrastructure is still catching up to the pace of launches, which is
+      the main factor buyers weigh against the lower entry price here.
+    hero_image: /verticals/realestate/templates/premium-v2/images/corridor-new-gurugram.png
+    last_verified_at: "2026-08-01"
+    is_published: true

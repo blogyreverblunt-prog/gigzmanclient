@@ -1,0 +1,356 @@
+# Property listings — DEMO CONTENT ONLY.
+#
+# Every price, RERA number, developer name and specification below is
+# fabricated pending real inventory from Expert Realtors. Developer names
+# are generic and do not refer to any real company. Photography is the
+# supplied Premium V2 design-pack imagery
+# (public/verticals/realestate/templates/premium-v2/images/) and must never
+# be captioned with a real project name.
+#
+# Slugs are chosen deliberately to cover every section of the Premium V2
+# homepage: 4 `new_launch` listings for "Explore new launches", a flagship +
+# 2 mid + 1 commercial/yield property for the "HOT properties" asymmetric
+# grid, plus villas/shops/plots/builder-floors for the services mosaic's
+# lower strip.
+
+_status: placeholder
+
+properties:
+  - slug: horizon-residences-golf-course-road
+    title: Horizon Residences
+    property_type: apartment
+    purpose: buy
+    status: new_launch
+    price: 32500000
+    price_label: null
+    price_per_sqft: 18500
+    sector: "54"
+    locality: Golf Course Road
+    corridor: Golf Course Road
+    beds: 3
+    baths: 3
+    area: 1850
+    area_unit: sqft
+    badge: "New Launch"
+    developer: Meridian Developers
+    rera_number: "HRERA-GGM-1234-2024"
+    description: >-
+      A 3 BHK residence on Golf Course Road with a private balcony overlooking
+      landscaped greens. Part of a gated development with a clubhouse and
+      dedicated visitor parking.
+    amenities: [Clubhouse, Swimming Pool, Landscaped Gardens, 24x7 Security, Power Backup, Covered Parking]
+    specs: { "Facing": "East", "Floor": "12 of 28", "Possession": "Dec 2027" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-luxury-highrise.png, alt: "Horizon Residences exterior", is_primary: true }
+
+  - slug: canvas-villas-sohna-road
+    title: Canvas Villas
+    property_type: villa
+    purpose: buy
+    status: new_launch
+    price: 65000000
+    price_label: null
+    price_per_sqft: null
+    sector: "70"
+    locality: Sohna Road
+    corridor: Sohna Road
+    beds: 5
+    baths: 6
+    area: 4500
+    area_unit: sqft
+    badge: "New Launch"
+    developer: Northgate Estates
+    rera_number: null
+    description: >-
+      A 5 BHK independent villa in a gated villa community on Sohna Road,
+      with a private garden and staff quarters.
+    amenities: [Private Garden, Staff Quarters, Clubhouse, "Covered Parking for 3", 24x7 Security]
+    specs: { "Plot Area": "350 sq.yd", "Floors": "G+2", "Possession": "Jun 2028" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-lowrise-villas.png, alt: "Canvas Villas exterior", is_primary: true }
+
+  - slug: willow-sco-new-gurugram
+    title: Willow SCO Plots
+    property_type: sco
+    purpose: buy
+    status: new_launch
+    price: 42000000
+    price_label: null
+    price_per_sqft: null
+    sector: "88"
+    locality: New Gurugram
+    corridor: Dwarka Expressway
+    beds: null
+    baths: null
+    area: 250
+    area_unit: sq.yd
+    badge: "New Launch"
+    developer: Northgate Estates
+    rera_number: null
+    description: >-
+      Shop-cum-office plot on a high street retail corridor in New Gurugram,
+      approved for ground-plus-three construction.
+    amenities: [High Street Frontage, Wide Service Lane, Underground Utilities]
+    specs: { "Frontage": "35 ft", "Permissible Floors": "G+3" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-commercial-retail.png, alt: "Willow SCO Plots street view", is_primary: true }
+
+  - slug: sunrise-floors-dwarka-expressway
+    title: Sunrise Floors
+    property_type: builder_floor
+    purpose: buy
+    status: new_launch
+    price: 18700000
+    price_label: null
+    price_per_sqft: 9200
+    sector: "82"
+    locality: New Gurugram
+    corridor: Dwarka Expressway
+    beds: 3
+    baths: 2
+    area: 2033
+    area_unit: sqft
+    badge: "New Launch"
+    developer: Northgate Estates
+    rera_number: "HRERA-GGM-5678-2023"
+    description: >-
+      Independent builder floor with a private terrace, in a low-rise
+      development close to the Dwarka Expressway corridor.
+    amenities: [Private Terrace, Covered Parking, Power Backup, 24x7 Security]
+    specs: { "Facing": "South-East", "Floor": "2 of 4", "Possession": "Immediate" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-family-residential.png, alt: "Sunrise Floors exterior", is_primary: true }
+
+  - slug: the-crestline-golf-course-road
+    title: The Crestline
+    property_type: apartment
+    purpose: buy
+    status: under_construction
+    price: 98000000
+    price_label: null
+    price_per_sqft: 26500
+    sector: "58"
+    locality: Golf Course Road
+    corridor: Golf Course Road
+    beds: 4
+    baths: 5
+    area: 3700
+    area_unit: sqft
+    badge: "Flagship"
+    developer: Meridian Developers
+    rera_number: "HRERA-GGM-1234-2024"
+    description: >-
+      Expert Realtors' flagship listing this quarter — a full-floor 4 BHK
+      residence in a limited-inventory high-rise on Golf Course Road, with a
+      private elevator lobby and double-height living room.
+    amenities: [Private Elevator Lobby, Infinity Pool, Concierge, Clubhouse, Covered Parking for 4, 24x7 Security]
+    specs: { "Facing": "North-East", "Floor": "22 of 30", "Possession": "Mar 2028" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/hero-curated-inventory.png, alt: "The Crestline flagship residence", is_primary: true }
+
+  - slug: emerald-court-golf-course-road
+    title: Emerald Court
+    property_type: apartment
+    purpose: rent
+    status: ready_to_move
+    price: 85000
+    price_label: "₹85,000 / month"
+    price_per_sqft: null
+    sector: "56"
+    locality: Golf Course Road
+    corridor: Golf Course Road
+    beds: 4
+    baths: 4
+    area: 2400
+    area_unit: sqft
+    badge: null
+    developer: Meridian Developers
+    rera_number: "HRERA-GGM-1234-2024"
+    description: >-
+      Fully furnished 4 BHK available for immediate move-in, in a well
+      maintained low-density building on Golf Course Road.
+    amenities: [Gymnasium, Swimming Pool, 24x7 Security, Power Backup, Modular Kitchen]
+    specs: { "Facing": "North", "Floor": "6 of 15", "Furnishing": "Fully furnished" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-family-residential.png, alt: "Emerald Court living room", is_primary: true }
+
+  - slug: birchwood-apartments-sohna-road
+    title: Birchwood Apartments
+    property_type: apartment
+    purpose: rent
+    status: ready_to_move
+    price: 42000
+    price_label: "₹42,000 / month"
+    price_per_sqft: null
+    sector: "68"
+    locality: Sohna Road
+    corridor: Sohna Road
+    beds: 2
+    baths: 2
+    area: 1250
+    area_unit: sqft
+    badge: null
+    developer: Meridian Developers
+    rera_number: "HRERA-GGM-1234-2024"
+    description: >-
+      2 BHK apartment available for rent, semi-furnished, in a mid-rise
+      development with a resident-only park.
+    amenities: [Resident Park, Covered Parking, Power Backup, 24x7 Security]
+    specs: { "Facing": "West", "Floor": "4 of 9", "Furnishing": "Semi-furnished" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-family-residential.png, alt: "Birchwood Apartments building", is_primary: true }
+
+  - slug: apex-business-park-golf-course-extension
+    title: Apex Business Park — Office Space
+    property_type: commercial
+    purpose: buy
+    status: ready_to_move
+    price: 12500000
+    price_label: null
+    price_per_sqft: 14500
+    sector: "60"
+    locality: Golf Course Road
+    corridor: Golf Course Road
+    beds: null
+    baths: null
+    area: 862
+    area_unit: sqft
+    badge: "Yield Asset"
+    developer: Meridian Developers
+    rera_number: "HRERA-GGM-1234-2024"
+    description: >-
+      Grade-A office space in a commercial tower with a dedicated conference
+      floor and covered parking for tenants and visitors — leased at a
+      steady yield to a national F&B tenant.
+    amenities: [Covered Parking, Power Backup, Central AC, Conference Facility, 24x7 Security]
+    specs: { "Floor": "9 of 18", "Fit-out": "Warm shell", "Current Yield": "7.4%" }
+    is_featured: true
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-commercial-retail.png, alt: "Apex Business Park office floor", is_primary: true }
+
+  - slug: dune-plots-spr
+    title: Dune Plots
+    property_type: plot
+    purpose: buy
+    status: ready_to_move
+    price: 24000000
+    price_label: null
+    price_per_sqft: null
+    sector: "63"
+    locality: Southern Peripheral Road
+    corridor: Southern Peripheral Road
+    beds: null
+    baths: null
+    area: 300
+    area_unit: sq.yd
+    badge: null
+    developer: Northgate Estates
+    rera_number: "HRERA-GGM-9012-2022"
+    description: >-
+      A licensed residential plot on SPR, in a sector with an approved
+      layout and active construction activity nearby.
+    amenities: [Gated Layout, Wide Roads, Underground Utilities]
+    specs: { "Corner Plot": "No", "Road Width": "24 ft" }
+    is_featured: false
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/corridor-southern-peripheral-road.png, alt: "Dune Plots layout view", is_primary: true }
+
+  - slug: highstreet-shops-new-gurugram
+    title: Highstreet Retail Shops
+    property_type: commercial
+    purpose: buy
+    status: under_construction
+    price: 8500000
+    price_label: null
+    price_per_sqft: 21000
+    sector: "89"
+    locality: New Gurugram
+    corridor: Dwarka Expressway
+    beds: null
+    baths: null
+    area: 405
+    area_unit: sqft
+    badge: null
+    developer: Northgate Estates
+    rera_number: "HRERA-GGM-3345-2025"
+    description: >-
+      Ground-floor retail shop on a planned high street, positioned for
+      footfall from the adjoining residential towers under construction.
+    amenities: [High Street Frontage, Escalator Access, Common Food Court, Power Backup]
+    specs: { "Floor": "Ground", "Possession": "Sep 2027" }
+    is_featured: false
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-commercial-retail.png, alt: "Highstreet Retail Shops facade", is_primary: true }
+
+  - slug: hillcrest-villas-sohna-road
+    title: Hillcrest Villas
+    property_type: villa
+    purpose: buy
+    status: under_construction
+    price: 48000000
+    price_label: null
+    price_per_sqft: null
+    sector: "71"
+    locality: Sohna Road
+    corridor: Sohna Road
+    beds: 4
+    baths: 5
+    area: 3600
+    area_unit: sqft
+    badge: null
+    developer: Northgate Estates
+    rera_number: "HRERA-GGM-7789-2025"
+    description: >-
+      4 BHK villa in a phased villa community on Sohna Road, with a private
+      terrace garden and reserved parking for two cars.
+    amenities: [Terrace Garden, Clubhouse, "Reserved Parking for 2", 24x7 Security]
+    specs: { "Plot Area": "270 sq.yd", "Floors": "G+1", "Possession": "Nov 2027" }
+    is_featured: false
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-lowrise-villas.png, alt: "Hillcrest Villas exterior", is_primary: true }
+
+  - slug: northgate-builder-floors-dwarka-expressway
+    title: Northgate Builder Floors
+    property_type: builder_floor
+    purpose: buy
+    status: ready_to_move
+    price: 21500000
+    price_label: null
+    price_per_sqft: 9800
+    sector: "84"
+    locality: New Gurugram
+    corridor: Dwarka Expressway
+    beds: 3
+    baths: 3
+    area: 2194
+    area_unit: sqft
+    badge: null
+    developer: Northgate Estates
+    rera_number: "HRERA-GGM-5678-2023"
+    description: >-
+      Independent 3 BHK builder floor with a private terrace, in a
+      low-density block close to the Dwarka Expressway service road.
+    amenities: [Private Terrace, Covered Parking, Power Backup, 24x7 Security]
+    specs: { "Facing": "East", "Floor": "3 of 4", "Possession": "Immediate" }
+    is_featured: false
+    is_active: true
+    images:
+      - { path: /verticals/realestate/templates/premium-v2/images/project-family-residential.png, alt: "Northgate Builder Floors exterior", is_primary: true }

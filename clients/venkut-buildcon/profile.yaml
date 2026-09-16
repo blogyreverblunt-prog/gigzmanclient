@@ -1,0 +1,111 @@
+# Client seed data — Venkut Buildcon (Premium V2 template)
+#
+# NAP below is read from the client's own Google Business Profile, rendered in
+# a real browser since the listing is client-side only. Verified from that
+# listing: name, category ("Real estate agent"), rating 5.0 from 4 reviews,
+# address, phone, plus code and coordinates. The signed-out listing exposes no
+# website, no email and no opening hours, so those stay empty or placeholder
+# rather than being invented — see `_status` at the bottom.
+#
+# Loaded into the database by `pnpm seed:client venkut-buildcon`.
+# Run `pnpm check:content venkut-buildcon` for the placeholder checklist.
+
+slug: venkut-buildcon
+vertical: realestate
+template: premium-v2
+display_name: Venkut Buildcon
+is_demo: false
+
+firm:
+  name: Venkut Buildcon
+  tagline: ""
+  overview: >-
+    Venkut Buildcon is a Gurugram property firm working with buyers, tenants
+    and investors across Sector 102 and the New Gurugram sectors, and builds and delivers projects of its own. Every listing
+    is reviewed before it goes live, and RERA registration status is shown
+    plainly on every property.
+  established_year: ""
+  firm_registration_number: ""
+  business_category: Real Estate Builders & Construction Company
+  logo_url: /verticals/realestate/templates/premium-v2/brand/venkut-buildcon-logo.png
+
+contact:
+  phone: "085275 02780"
+  whatsapp: "085275 02780"
+  email: ""
+  address_line: "Shop No 3, Shyam Chowk, ROF Aalayas, Sector 102"
+  locality: "Gurugram"
+  region: Haryana
+  postal_code: "122505"
+  country: India
+  latitude: "28.4739851"
+  longitude: "76.9636975"
+  google_maps_url: "https://www.google.com/maps/search/?api=1&query=Venkut%20Buildcon&query_place_id=ChIJHW7MF1AXDTkRDKVxeM6tokQ"
+
+# The listing exposes no hours in the signed-out view, so this is a plain
+# office-hours assumption pending the client's confirmation.
+opening_hours:
+  - { day: Monday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Tuesday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Wednesday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Thursday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Friday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Saturday, opens: "10:00", closes: "19:00", closed: false }
+  - { day: Sunday, opens: "10:00", closes: "19:00", closed: true }
+
+social_links: {}
+
+seo:
+  title: Venkut Buildcon — Buy, Sell & Rent Property in Gurugram
+  description: >-
+    Residential and commercial property in Sector 102 and across Gurugram —
+    buying, selling and renting, with locality market intelligence and buyer
+    calculators.
+
+analytics:
+  ga4_measurement_id: ""
+  search_console_verification: ""
+
+features:
+  reviews: true
+  pricing: true
+  awards: false
+  client_logos: false
+  team: false
+
+team: []
+
+notification_email: ""
+
+_status:
+  slug: verified
+  display_name: verified
+  firm.name: verified
+  firm.business_category: verified
+  firm.logo_url: verified
+  firm.tagline: pending
+  firm.overview: placeholder
+  firm.established_year: pending
+  firm.firm_registration_number: pending
+  contact.phone: verified
+  contact.whatsapp: placeholder
+  contact.email: pending
+  contact.address_line: verified
+  contact.locality: verified
+  contact.region: verified
+  contact.postal_code: verified
+  contact.country: verified
+  contact.google_maps_url: verified
+  contact.latitude: verified
+  contact.longitude: verified
+  opening_hours: placeholder
+  social_links: pending
+  seo.title: placeholder
+  seo.description: placeholder
+  analytics.ga4_measurement_id: pending
+  analytics.search_console_verification: pending
+  team: pending
+  notification_email: pending
+  content.properties: placeholder
+  content.localities: placeholder
+  content.updates: placeholder
