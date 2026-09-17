@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, MapPin, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { properties } from "@/lib/db/schema";
 import { formatIndianPrice, formatNumber, PROPERTY_STATUS_LABELS, PROPERTY_TYPE_LABELS } from "@/lib/format";
 import PropertyEnquireButton from "./PropertyEnquireButton";
@@ -29,10 +29,18 @@ type CardSize = "default" | "large" | "tall";
  * compact block as every other card, instead of the buttons drifting to the
  * bottom of a very tall card with a gap above them.
  */
+/**
+ * Below `lg` every size uses the SAME aspect ratio, and that is load-bearing.
+ * The mobile carousel is a flex row, so its cards stretch to the tallest one;
+ * the `lg:flex-1` that lets the image soak up that extra height does not apply
+ * at this breakpoint. With mixed ratios the tall card (4/5, ~400px at the
+ * carousel's 82% width) set the height and the 16/10 card (~200px) rendered
+ * 200px of blank white below its buttons.
+ */
 const IMAGE_SIZE_CLASSES: Record<CardSize, string> = {
   default: "aspect-[4/3]",
-  large: "aspect-[16/10] lg:aspect-auto lg:min-h-[260px] lg:flex-1",
-  tall: "aspect-[4/5] lg:aspect-auto lg:min-h-[260px] lg:flex-1",
+  large: "aspect-[4/3] lg:aspect-auto lg:min-h-[260px] lg:flex-1",
+  tall: "aspect-[4/3] lg:aspect-auto lg:min-h-[260px] lg:flex-1",
 };
 
 const IMAGE_SIZES: Record<CardSize, string> = {
@@ -98,12 +106,29 @@ export default function PropertyCardV2({
             {pillLabel}
           </span>
 
+          {/*
+            Both branches render. A listing without a RERA number must say so
+            visibly — Indian law requires the registration on any advertisement
+            for a registered project, and a card that simply omits the badge
+            reads as though the listing has one. This branch was `: null` until
+            it was caught by a health check, which silently affected 456 active
+            listings across the platform, all 442 of Evergreen's among them.
+
+            Same geometry as the verified badge on purpose: a pending state
+            that is smaller or dimmer than the positive one is the same
+            omission wearing a different coat.
+          */}
           {rera ? (
             <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[color:var(--gp-forest-950)]/85 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[color:var(--gp-gold-300)] backdrop-blur-sm">
               <ShieldCheck className="h-3 w-3" aria-hidden="true" />
               RERA
             </span>
-          ) : null}
+          ) : (
+            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[color:var(--gp-forest-950)]/85 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[color:var(--color-status-warn-soft)] backdrop-blur-sm">
+              <ShieldAlert className="h-3 w-3" aria-hidden="true" />
+              Registration pending
+            </span>
+          )}
         </div>
       </Link>
 

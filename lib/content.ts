@@ -255,6 +255,22 @@ export interface PropertyFilters {
   maxPrice?: number;
   /** Free-text match against title, locality, sector and corridor. */
   search?: string;
+  /**
+   * Cap the rows fetched, applied as SQL `LIMIT` rather than by slicing the
+   * result.
+   *
+   * The difference is the whole point. A caller wanting four "similar
+   * properties" in Gurugram was fetching 678 full rows — 1.6 MB over the wire,
+   * every column including `description`, `amenities` and `specs` — and then
+   * keeping four. Across a full prerender that was roughly 1.2 GB of egress
+   * per build from one call site, against a database that is 32 MB in total,
+   * and it is what put the Supabase free tier 623% over quota.
+   *
+   * Only pass this where the caller wants the top N in the default order. A
+   * filtered listing page that paginates must not use it, or page two is
+   * silently empty.
+   */
+  limit?: number;
 }
 
 /**
@@ -279,11 +295,13 @@ export async function getProperties(clientId: string, filters: PropertyFilters =
     );
   }
 
-  return db
+  const query = db
     .select()
     .from(properties)
     .where(and(...conditions))
     .orderBy(desc(properties.isFeatured), asc(properties.sortOrder));
+
+  return filters.limit === undefined ? query : query.limit(filters.limit);
 }
 
 export const getFeaturedProperties = cache(async (clientId: string, limit = 6) =>

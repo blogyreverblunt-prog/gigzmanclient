@@ -128,11 +128,11 @@ export default async function PropertyDetailPage(props: PageProps<"/site/[tenant
     // zero "Similar Properties").
     const MIN_SIMILAR = 3;
     const byLocality = property.locality
-      ? await getProperties(tenant.id, { locality: property.locality })
+      ? await getProperties(tenant.id, { locality: property.locality, limit: 8 })
       : [];
     let similarMatches = byLocality.filter((item) => item.id !== property.id);
     if (similarMatches.length < MIN_SIMILAR) {
-      const byType = await getProperties(tenant.id, { propertyType: property.propertyType });
+      const byType = await getProperties(tenant.id, { propertyType: property.propertyType, limit: 8 });
       const seen = new Set(similarMatches.map((item) => item.id));
       for (const item of byType) {
         if (item.id === property.id || seen.has(item.id)) continue;
@@ -166,7 +166,7 @@ export default async function PropertyDetailPage(props: PageProps<"/site/[tenant
   }
 
   const sameLocality = property.locality
-    ? await getProperties(tenant.id, { locality: property.locality })
+    ? await getProperties(tenant.id, { locality: property.locality, limit: 8 })
     : [];
   const related = sameLocality.filter((item) => item.id !== property.id).slice(0, 3);
 
