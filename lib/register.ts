@@ -135,6 +135,28 @@ export function sectorSlug(sector: string): string {
   return sector.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+/**
+ * How a visitor writes a sector, reduced to the key `sectorSlug` produces:
+ * "Sector 54", "sector-54", "Sec 54", "54" and "63A" all resolve. Returns
+ * null for anything that is not a sector, so a corridor or project name falls
+ * through to free-text search.
+ *
+ * This exists because the column stores the label bare — "54", never
+ * "Sector 54". Matching a search term as a substring of a joined haystack
+ * therefore found nothing at all for the way people actually type it, while a
+ * bare "54" over-matched: it also hit sector 54G and any title containing the
+ * digits ("10.5437 Acres Group Housing Colony"). Every one of the register's
+ * 153 sector labels is digits plus at most one sub-block letter, so the
+ * pattern can afford to be strict — and strict is what keeps "102" off the
+ * 102A and 102G listings.
+ */
+const SECTOR_QUERY = /^(?:sector|sec)?[\s.,-]*(\d{1,3}[a-z]?)$/i;
+
+export function parseSectorQuery(term: string): string | null {
+  const match = term.trim().match(SECTOR_QUERY);
+  return match ? match[1].toLowerCase() : null;
+}
+
 /** Sector 2 before Sector 10 before Sector 63A. */
 export function compareSectors(a: string, b: string): number {
   const na = parseInt(a, 10);

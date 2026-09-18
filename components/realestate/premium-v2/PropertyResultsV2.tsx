@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import PropertyCardV2 from "./PropertyCardV2";
+import { parseSectorQuery, sectorSlug } from "@/lib/register";
 import type { properties } from "@/lib/db/schema";
 
 type Property = typeof properties.$inferSelect;
@@ -54,6 +55,8 @@ export default function PropertyResultsV2({
     const beds = Number(get("beds")) || undefined;
     const maxPrice = Number(get("maxPrice")) || undefined;
     const search = get("search")?.trim().toLowerCase();
+    // Parsed once for the whole list, not per row.
+    const sectorTerm = search ? parseSectorQuery(search) : null;
     const amenities = (get("amenities") ?? "").split(",").filter(Boolean);
     const verifiedOnly = get("verified") === "1";
     const sort = get("sort") ?? "";
@@ -71,11 +74,20 @@ export default function PropertyResultsV2({
         if (!amenities.every((a) => own.includes(a))) return false;
       }
       if (search) {
-        const haystack = [property.title, property.locality, property.sector, property.corridor]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        if (!haystack.includes(search)) return false;
+        // A sector term is matched against the sector column as a whole
+        // value; everything else is a substring search over the text
+        // columns. Sector deliberately stays out of the free-text haystack —
+        // it is stored bare ("54"), so it contributed nothing for "Sector 54"
+        // and only noise for "54". See parseSectorQuery.
+        if (sectorTerm) {
+          if (!property.sector || sectorSlug(property.sector) !== sectorTerm) return false;
+        } else {
+          const haystack = [property.title, property.locality, property.corridor]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          if (!haystack.includes(search)) return false;
+        }
       }
       return true;
     });

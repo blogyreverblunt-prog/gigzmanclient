@@ -8,7 +8,12 @@ import HeroSearchBar from "@/components/realestate/HeroSearchBar";
 import PremiumV2LocalitiesIndexPage from "@/components/realestate/premium-v2/PremiumV2LocalitiesIndexPage";
 import { getTenantBySlug, basePathFor, joinPath } from "@/lib/tenant";
 import { templateKeyFor } from "@/lib/templates";
-import { getFirmSettings, getLocalities, getPropertyLocalityFacets } from "@/lib/content";
+import {
+  getFirmSettings,
+  getLocalities,
+  getPropertyLocalityFacets,
+  getPropertySectorFacets,
+} from "@/lib/content";
 import { PROPERTY_TYPE_LABELS } from "@/lib/format";
 import { buildBreadcrumbJsonLd, buildItemListJsonLd, jsonLdProps } from "@/lib/schema-org";
 
@@ -37,13 +42,20 @@ export default async function LocalitiesPage(props: PageProps<"/site/[tenant]/lo
 
   const basePath = basePathFor(tenant);
   const p = (path: string) => joinPath(basePath, path);
-  const [localities, localityFacets] = await Promise.all([
+  const [localities, localityFacets, sectorFacets] = await Promise.all([
     getLocalities(tenant.id),
     getPropertyLocalityFacets(tenant.id),
+    getPropertySectorFacets(tenant.id),
   ]);
 
   if (templateKeyFor(tenant) === "premium-v2") {
-    return <PremiumV2LocalitiesIndexPage localities={localities} basePath={basePath} />;
+    return (
+      <PremiumV2LocalitiesIndexPage
+        localities={localities}
+        sectorFacets={sectorFacets}
+        basePath={basePath}
+      />
+    );
   }
 
   const itemListJsonLd = buildItemListJsonLd(

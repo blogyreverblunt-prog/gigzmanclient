@@ -18,9 +18,12 @@ const HERO_IMAGE = "/verticals/realestate/templates/premium-v2/images/hero-local
 
 export default function PremiumV2LocalitiesIndexPage({
   localities,
+  sectorFacets,
   basePath,
 }: {
   localities: Locality[];
+  /** Sectors with live inventory, most-stocked first — see getPropertySectorFacets. */
+  sectorFacets: { sector: string; count: number }[];
   basePath: string;
 }) {
   const p = (path: string) => joinPath(basePath, path);
@@ -49,6 +52,9 @@ export default function PremiumV2LocalitiesIndexPage({
   const totalActiveProjects = localities.reduce((sum, loc) => sum + (loc.activeProjects ?? 0), 0);
 
   const localityOptions = localities.map((loc) => ({ name: loc.name, slug: loc.slug }));
+  // Labels only — the search box resolves a typed sector against this, so it
+  // must be every stocked sector, not just the twelve the cards below show.
+  const sectorOptions = sectorFacets.map((facet) => facet.sector);
 
   const stats = [
     { icon: MapPinned, value: `${localities.length}`, label: "Localities Tracked" },
@@ -108,7 +114,11 @@ export default function PremiumV2LocalitiesIndexPage({
           </p>
 
           <div className="mt-8 max-w-xl">
-            <LocalitySearchFormV2 basePath={basePath} localityOptions={localityOptions} />
+            <LocalitySearchFormV2
+              basePath={basePath}
+              localityOptions={localityOptions}
+              sectorOptions={sectorOptions}
+            />
           </div>
 
           <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-white/15 pt-8 sm:grid-cols-4">
@@ -151,7 +161,7 @@ export default function PremiumV2LocalitiesIndexPage({
           <LocalityGrowthCatalystsV2 />
 
           {/* ── Popular sectors and locality pages ───────────────────────── */}
-          <PopularSectorsV2 p={p} />
+          <PopularSectorsV2 sectors={sectorFacets} p={p} />
         </>
       )}
 

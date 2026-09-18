@@ -381,6 +381,28 @@ export const getPropertyLocalityFacets = cache(async (clientId: string) => {
   return rows.map((r) => r.locality).filter((v): v is string => Boolean(v));
 });
 
+/**
+ * Sectors this client actually holds inventory in, most-stocked first.
+ *
+ * Feeds the sector discovery links and the sector resolution in the locality
+ * search box. Counted in SQL rather than derived on the client because the
+ * localities page ships no listing rows of its own — pulling ~1000 rows over
+ * to count them would undo the payload trimming in `withStats`.
+ */
+export const getPropertySectorFacets = cache(async (clientId: string) =>
+  cachedForClient("property-sector-facets", clientId, async () => {
+    const rows = await db
+      .select({ sector: properties.sector, count: sql<number>`count(*)::int` })
+      .from(properties)
+      .where(and(eq(properties.clientId, clientId), eq(properties.isActive, true)))
+      .groupBy(properties.sector)
+      .orderBy(desc(sql`count(*)`), asc(properties.sector));
+    return rows
+      .filter((row): row is { sector: string; count: number } => Boolean(row.sector))
+      .map((row) => ({ sector: row.sector, count: row.count }));
+  }),
+);
+
 export const getLocalities = cache(async (clientId: string) =>
   cachedForClient("localities", clientId, async () =>
     db

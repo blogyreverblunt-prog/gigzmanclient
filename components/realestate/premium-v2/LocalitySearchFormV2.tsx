@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { joinPath } from "@/lib/paths";
 import { analytics } from "@/lib/analytics";
+import { parseSectorQuery, sectorSlug } from "@/lib/register";
 
 interface LocalityOption {
   name: string;
@@ -14,9 +15,17 @@ interface LocalityOption {
 export default function LocalitySearchFormV2({
   basePath,
   localityOptions,
+  sectorOptions,
 }: {
   basePath: string;
   localityOptions: LocalityOption[];
+  /**
+   * Sector labels this client actually has inventory in, as stored ("54",
+   * "63A"). Checked before routing so an unstocked sector falls through to
+   * search rather than landing on a 404 — /sectors/[sector] only renders the
+   * sectors present in the register.
+   */
+  sectorOptions: string[];
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -29,21 +38,35 @@ export default function LocalitySearchFormV2({
       return;
     }
 
-    // A direct hit against one of the five tracked corridors sends the
-    // visitor straight to its dedicated page; anything else (a sector
-    // number, a builder floor address) falls back to the properties
-    // listing's free-text search rather than a dead end.
-    const matched = localityOptions.find(
-      (loc) =>
-        loc.name.toLowerCase() === term.toLowerCase() ||
-        loc.name.toLowerCase().includes(term.toLowerCase()),
-    );
+    // Three destinations, most specific first.
+    //
+    // A sector goes to its own /sectors/{n} page rather than to a filtered
+    // listing: that page is prerendered, writes its heading and summary from
+    // the sector's own register figures, and is the URL worth sharing and
+    // ranking. The placeholder has invited a sector here all along, but the
+    // term used to be handed to a free-text search that could not match the
+    // bare "54" the column stores — so all 153 sectors returned nothing.
+    const sectorTerm = parseSectorQuery(term);
+    const sector = sectorTerm
+      ? sectorOptions.find((label) => sectorSlug(label) === sectorTerm)
+      : undefined;
+
+    // Exact corridor name before a partial one, so "Sohna Road" cannot be
+    // beaten by whichever entry happens to contain it first.
+    const lower = term.toLowerCase();
+    const locality =
+      localityOptions.find((loc) => loc.name.toLowerCase() === lower) ??
+      localityOptions.find((loc) => loc.name.toLowerCase().includes(lower));
 
     analytics.searchSubmit("localities_index");
 
-    if (matched) {
-      router.push(joinPath(basePath, `/localities/${matched.slug}`));
+    if (sector) {
+      router.push(joinPath(basePath, `/sectors/${sectorSlug(sector)}`));
+    } else if (locality) {
+      router.push(joinPath(basePath, `/localities/${locality.slug}`));
     } else {
+      // Anything else — a project name, an unstocked sector, a builder floor
+      // address — still falls back to search rather than a dead end.
       router.push(joinPath(basePath, `/properties?search=${encodeURIComponent(term)}`));
     }
   }
